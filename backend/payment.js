@@ -1,6 +1,6 @@
 import Stripe from "stripe";
 // ✅ Good (using env variable):
-const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 // your secret key here
 

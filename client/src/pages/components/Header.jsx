@@ -22,7 +22,7 @@ const Header = () => {
             {/* Logo */}
             <div className="flex-1">
               <Link to={`/`} onClick={() => handleLinkClick("/")}>
-                <h1 className="text-4xl font-bold text-[#EB662B]">Trevo</h1>
+                <h1 className="text-4xl font-bold text-[#EB662B]">Travel-Zone</h1>
               </Link>
             </div>
 

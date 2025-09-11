@@ -76,7 +76,7 @@ const Signup = () => {
         <div className="w-[90%] bg-white md:w-[60%] mx-auto flex flex-col  rounded-md gap-6">
           {/* Centered Heading */}
           <h1 className="text-center text-lg mt-6 font-medium md:text-3xl md:font-bold text-gray-800">
-            Signup into <span className="text-[#FF7D68]">Trevo</span>
+            Signup into <span className="text-[#FF7D68]">Travel-Zone</span>
           </h1>
 
           {/* Form + Image Box */}

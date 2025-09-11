@@ -11,9 +11,9 @@ const Footer = () => {
       <div className="max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-4 gap-8">
         {/* Brand */}
         <div>
-          <h2 className="text-2xl font-bold mb-4">Trevo</h2>
+          <h2 className="text-2xl font-bold mb-4">Travel-Zone</h2>
           <p className="text-sm">
-            Explore the world with comfort and confidence. Trevo brings top
+            Explore the world with comfort and confidence. Travel-Zone brings top
             travel experiences to your fingertips.
           </p>
         </div>
@@ -48,7 +48,7 @@ const Footer = () => {
         {/* Contact */}
         <div>
           <h3 className="text-lg font-semibold mb-4">Contact Us</h3>
-          <p className="text-sm">Email: support@trevo.com</p>
+          <p className="text-sm">Email: support@travelzone.com</p>
           <p className="text-sm">Phone: +123 456 7890</p>
           <p className="text-sm">Location: Dubai, UAE</p>
         </div>
@@ -74,7 +74,7 @@ const Footer = () => {
       </div>
 
       <div className="mt-10 text-center text-sm border-t border-white/30 pt-4">
-        © {new Date().getFullYear()} Trevo. All rights reserved.
+        © {new Date().getFullYear()} Travel-Zone. All rights reserved.
       </div>
     </footer>
   );

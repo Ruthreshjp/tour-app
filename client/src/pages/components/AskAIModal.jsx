@@ -27,7 +27,7 @@ const AskAIModal = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 backdrop-blur-sm">
       <div className="bg-white dark:bg-zinc-900 p-6 rounded-2xl shadow-2xl w-[90%] max-w-lg relative animate-fade-in-up">
         <h2 className="text-2xl font-semibold mb-4 text-center text-zinc-800 dark:text-zinc-100">
-          I'am Trevo AI
+          I'am Travel-Zone AI
         </h2>
         <textarea
           value={prompt}

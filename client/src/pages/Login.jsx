@@ -55,7 +55,7 @@ const Login = () => {
         <div className=" rounded-md w-[90%] bg-white md:w-[60%] mx-auto flex flex-col gap-6">
           {/* Centered Heading */}
           <h1 className="text-center text-lg mt-6 font-medium md:text-3xl md:font-bold text-gray-800">
-            Welcome to <span className="text-[#6358DC]">Trevo</span>
+            Welcome to <span className="text-[#6358DC]">Travel-Zone</span>
           </h1>
 
           {/* Form + Image Box */}

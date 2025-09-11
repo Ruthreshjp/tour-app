@@ -19,10 +19,10 @@ const About = () => {
           {/* Right Text Section */}
           <div className="w-full md:w-1/2 text-center md:text-left">
             <h2 className="text-3xl font-bold text-[#EB662B] mb-4">
-              About Trevo
+              About Travel-Zone
             </h2>
             <p className="text-gray-700 text-lg leading-relaxed">
-              At <span className="font-semibold text-[#EB662B]">Trevo</span>, we
+              At <span className="font-semibold text-[#EB662B]">Travel-Zone</span>, we
               believe that every journey should be unforgettable. Our mission is
               to help you explore the world with ease and comfort — whether
               you're looking for serene beaches, vibrant cities, or thrilling
@@ -30,7 +30,7 @@ const About = () => {
               24/7 support, we make sure your travel dreams come true.
             </p>
             <p className="text-gray-700 mt-4">
-              Start your journey today with Trevo — where your adventure begins.
+              Start your journey today with Travel-Zone — where your adventure begins.
             </p>
             <button
               onClick={() => navigate("/search")}

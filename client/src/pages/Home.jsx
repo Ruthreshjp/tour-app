@@ -107,7 +107,7 @@ const Home = () => {
             Discover the World, One Journey at a Time
           </h1>
           <h1 className="text-white text-sm text-center xsm:text-lg font-semibold">
-            Make Your Travel Dream Come True With Trevo
+            Make Your Travel Dream Come True With Travel-Zone
           </h1>
           <div className="w-full flex justify-center items-center gap-2 mt-8">
             <input

@@ -271,7 +271,7 @@ const Booking = () => {
                 {packageData.packageOffer ? (
                   <>
                     <span className="line-through text-gray-700">
-                      ${packageData.packagePrice}
+                      Rs. {packageData.packagePrice}
                     </span>{" "}
                     -<span>${packageData.packageDiscountPrice}</span>
                     <span className="text-xs md:text-lg ml-3 bg-[#EB662B] md:p-1 px-4 md:px-5 rounded text-white">
@@ -286,7 +286,7 @@ const Booking = () => {
                   </>
                 ) : (
                   <span className="text-[#EB662B]">
-                    ${packageData.packagePrice}
+                    Rs. {packageData.packagePrice}
                   </span>
                 )}
               </p>

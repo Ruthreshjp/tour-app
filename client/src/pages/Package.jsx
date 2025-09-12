@@ -179,7 +179,7 @@ const Package = () => {
                 {packageData.packageDestination}
               </p>
               <p className="text-[#05073C] text-lg font-semibold">
-                ${packageData.packagePrice}
+                Rs. {packageData.packagePrice}
               </p>
             </div>
 

@@ -110,14 +110,14 @@ const Booking = () => {
               transition={{ delay: 0.4 }}
             />
             <h1 className="text-gray-800 my-4 text-lg font-semibold md:text-xl md:font-bold">
-              Trip To Greece
+              Trip To Goa
             </h1>
             <div className="flex items-center justify-around gap-3 text-sm text-gray-600">
-              <p>23rd April</p> |<p>Trip to Greece</p>
+              <p>30 September</p> |<p>Trip to Goa</p>
             </div>
             <div className="flex items-center justify-around gap-5 my-3 text-sm text-gray-700 font-medium">
               <p>24 people going</p>
-              <p>$2,500</p>
+              <p>Rs. 2,500</p>
             </div>
           </div>
         </motion.div>

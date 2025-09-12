@@ -8,19 +8,20 @@ import {
   updatePackage,
 } from "../controllers/package.controller.js";
 import upload from "../middlewares/multer.js";
+
 const router = express.Router();
 
-//create package
+// Create package
 router.post(
-  "/create-package",
+  "/add-package",
   requireSignIn,
   isAdmin,
   upload.array("packageImages", 10),
   createPackage
 );
 
-//update package by id
-router.post(
+// Update package by id
+router.put(
   "/update-package/:id",
   requireSignIn,
   isAdmin,
@@ -28,13 +29,13 @@ router.post(
   updatePackage
 );
 
-//delete package by id
+// Delete package by id
 router.delete("/delete-package/:id", requireSignIn, isAdmin, deletePackage);
 
-//get all packages
+// Get all packages
 router.get("/get-packages", getPackages);
 
-//get single package data by id
+// Get single package data by id
 router.get("/get-package-data/:id", getPackageData);
 
 export default router;

@@ -1,13 +1,10 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import {
-  loginStart,
-  loginSuccess,
-  loginFailure,
-} from "../redux/user/userSlice.js";
+import { loginStart, loginSuccess, loginFailure } from "../redux/user/userSlice.js";
 import { useDispatch, useSelector } from "react-redux";
 import loginImage from "../assets/images/login.png";
+
 const Login = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -16,6 +13,7 @@ const Login = () => {
     email: "",
     password: "",
   });
+
   const handleChange = (e) => {
     setFormData({
       ...formData,
@@ -27,43 +25,41 @@ const Login = () => {
     e.preventDefault();
     try {
       dispatch(loginStart());
-      const res = await fetch(`/api/auth/login`, {
+      const res = await fetch("http://localhost:8000/api/auth/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
+        credentials: "include", // Add this to send/receive cookies
         body: JSON.stringify(formData),
       });
       const data = await res.json();
       if (data?.success) {
         dispatch(loginSuccess(data?.user));
         toast.success(data?.message);
-        navigate("/");
+        navigate("/"); // Or navigate to "/add-package" for testing
       } else {
         dispatch(loginFailure(data?.message));
-        toast.error(data?.message);
+        toast.error(data?.message || "Login failed!");
       }
     } catch (error) {
       dispatch(loginFailure(error.message));
-      console.log(error);
+      console.error("Login error:", error.message);
+      toast.error(error.message || "Login failed! Check console for details.");
     }
   };
 
   return (
-    <div className=" w-full mx-auto h-screen flex justify-center items-center bg-[#FFF1DA]">
+    <div className="w-full mx-auto h-screen flex justify-center items-center bg-[#FFF1DA]">
       <div className="w-full min-h-screen flex items-center justify-center bg-[#FFF1DA]">
-        <div className=" rounded-md w-[90%] bg-white md:w-[60%] mx-auto flex flex-col gap-6">
-          {/* Centered Heading */}
+        <div className="rounded-md w-[90%] bg-white md:w-[60%] mx-auto flex flex-col gap-6">
           <h1 className="text-center text-lg mt-6 font-medium md:text-3xl md:font-bold text-gray-800">
             Welcome to <span className="text-[#6358DC]">Travel-Zone</span>
           </h1>
-
-          {/* Form + Image Box */}
-          <div className="flex flex-col md:flex-row gap-5  h-auto md:h-[450px] rounded-md items-center justify-center p-4">
+          <div className="flex flex-col md:flex-row gap-5 h-auto md:h-[450px] rounded-md items-center justify-center p-4">
             <div className="w-full md:w-1/2 flex justify-center">
               <img src={loginImage} alt="Login" className="max-h-[300px]" />
             </div>
-
             <form onSubmit={handleSubmit} className="w-full md:w-1/2 px-4">
               <div>
                 <label>Email</label>

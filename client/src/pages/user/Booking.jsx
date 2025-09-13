@@ -273,7 +273,7 @@ const Booking = () => {
                     <span className="line-through text-gray-700">
                       Rs. {packageData.packagePrice}
                     </span>{" "}
-                    -<span>${packageData.packageDiscountPrice}</span>
+                    -<span>Rs. {packageData.packageDiscountPrice}</span>
                     <span className="text-xs md:text-lg ml-3 bg-[#EB662B] md:p-1 px-4 md:px-5 rounded text-white">
                       {Math.floor(
                         ((+packageData.packagePrice -
@@ -341,7 +341,7 @@ const Booking = () => {
               <p className="text-xl font-semibold">
                 Total Price:{" "}
                 <span className="text-[#EB662B]">
-                  $
+                  Rs. 
                   {packageData.packageDiscountPrice
                     ? packageData.packageDiscountPrice * bookingData.persons
                     : packageData.packagePrice * bookingData.persons}

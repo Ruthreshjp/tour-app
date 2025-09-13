@@ -100,8 +100,9 @@ const Profile = () => {
                       : "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTueIx2Jkawe7r91I50VfVAZLS60yx8RjiSfQ&s"
                   }
                   alt="Profile photo"
-                  className="w-36 h-36  rounded-full object-cover"
-                />
+                  className="w-37 h-37  rounded-full object-cover center"
+                />  
+                
               </div>
               {/* Upload Button */}
 

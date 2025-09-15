@@ -48,7 +48,7 @@ const Footer = () => {
         {/* Contact */}
         <div>
           <h3 className="text-lg font-semibold mb-4">Contact Us</h3>
-          <p className="text-sm">Email: support@travelzone.com</p>
+          <p className="text-sm">Email: travelzone123@gmail.com</p>
           <p className="text-sm">Owner: Ruthresh</p>
           <p className="text-sm">Phone: +123 456 7890</p>
           <p className="text-sm">Location: KEC, Perundurai</p>

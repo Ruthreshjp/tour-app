@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
+import { toast } from "react-toastify";
 import emailjs from "emailjs-com";
 
 const Contact = () => {
@@ -8,27 +9,56 @@ const Contact = () => {
     user_email: "",
     message: "",
   });
-
+  const [isLoading, setIsLoading] = useState(false);
   const [isSent, setIsSent] = useState(false);
 
   const sendEmail = (e) => {
     e.preventDefault();
+    setIsLoading(true);
+    setIsSent(false);
+
+    // Validate form data
+    if (!formData.user_name.trim() || !formData.user_email.trim() || !formData.message.trim()) {
+      toast.error("Please fill out all fields!");
+      setIsLoading(false);
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.user_email)) {
+      toast.error("Please enter a valid email address!");
+      setIsLoading(false);
+      return;
+    }
+
     emailjs
       .send(
-        "service_t7sng6h",
-        "template_0558q8s",
+        import.meta.env.VITE_EMAILJS_SERVICE_ID || "YOUR_SERVICE_ID", // Replace with your Service ID (e.g., service_123xyz)
+        import.meta.env.VITE_EMAILJS_TEMPLATE_ID || "YOUR_TEMPLATE_ID", // Replace with your Template ID (e.g., template_456abc)
         formData,
-        "oJc2CZ716CGc5FbjT"
+        import.meta.env.VITE_EMAILJS_USER_KEY || "pHsLwykSShL7KSIgm" // Your Public Key
       )
       .then(
-        () => {
+        (result) => {
+          console.log("Email sent successfully:", result.text);
+          toast.success("Message sent successfully!");
           setIsSent(true);
           setFormData({ user_name: "", user_email: "", message: "" });
         },
         (error) => {
-          console.error("FAILED...", error);
+          console.error("Email send failed:", error);
+          let errorMsg = "Failed to send message. Please try again!";
+          if (error.status === 400) {
+            errorMsg = "Invalid EmailJS configuration. Check your Service ID, Template ID, or Public Key in the EmailJS dashboard.";
+          } else if (error.status === 412) {
+            errorMsg = "Gmail authentication failed (412). Please reconnect your Gmail account in the EmailJS dashboard.";
+          } else if (error.text) {
+            errorMsg = error.text;
+          }
+          toast.error(errorMsg);
         }
-      );
+      )
+      .finally(() => {
+        setIsLoading(false);
+      });
   };
 
   return (
@@ -95,9 +125,10 @@ const Contact = () => {
             <motion.button
               type="submit"
               whileTap={{ scale: 0.95 }}
-              className="bg-[#EB662B] text-white font-semibold px-6 py-3 rounded-lg  transition"
+              disabled={isLoading}
+              className="bg-[#EB662B] text-white font-semibold px-6 py-3 rounded-lg hover:bg-[#d15525] transition disabled:opacity-70"
             >
-              Send Message
+              {isLoading ? "Sending..." : "Send Message"}
             </motion.button>
             {isSent && (
               <p className="text-green-600 font-medium mt-3">

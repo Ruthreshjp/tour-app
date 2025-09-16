@@ -22,7 +22,7 @@ import Blog from "./pages/Blog";
 import Contact from "./pages/Contact";
 import "leaflet/dist/leaflet.css";
 import { FaRobot } from "react-icons/fa";
-import AskAIModal from "./pages/components/AskAIModal";
+
 const App = () => {
   const [showModal, setShowModal] = useState(false);
   const [aiReply, setAIReply] = useState("");
@@ -89,20 +89,6 @@ const App = () => {
         <ToastContainer />
         <Footer />
       </BrowserRouter>
-      <button
-        onClick={() => setShowModal(true)}
-        className="fixed bottom-6 right-6 z-50 p-3 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-xl animate-bounce"
-      >
-        <FaRobot size={24} />
-      </button>
-      {/* AI Modal */}
-      <AskAIModal
-        isOpen={showModal}
-        onClose={() => setShowModal(false)}
-        onAsk={handleAsk}
-        reply={aiReply}
-        loading={loading}
-      />
     </>
   );
 };

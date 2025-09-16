@@ -102,7 +102,7 @@ const AddPackages = () => {
       if (res.data.success) {
         toast.success(res.data.message || "Package saved successfully!");
         setFormData(initialFormData);
-        navigate("/packages");
+        navigate("/search");
       } else {
         console.error("Backend error response:", res.data);
         toast.error(res.data.message || "Failed to save package!");

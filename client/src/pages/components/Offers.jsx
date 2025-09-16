@@ -1,5 +1,6 @@
 import { FaClock } from "react-icons/fa";
 import { Link } from "react-router-dom";
+
 const Offers = ({ packageData }) => {
   return (
     <div className="w-[260px] flex flex-col gap-2 items-center bg-white rounded-md py-2 shadow-sm transition-transform duration-300 hover:scale-105">
@@ -15,45 +16,43 @@ const Offers = ({ packageData }) => {
           />
         </Link>
       </div>
-      <p>
+      <div className="text-sm">
         {packageData.offer && packageData.packageDiscountPrice ? (
-          <p className=" text-sm">
+          <span>
             <span className="line-through text-gray-700">
               Rs. {packageData.packagePrice}
             </span>
-            -
-            <span className="text-sm ">
-              Rs. {packageData.packageDiscountPrice}
-            </span>
-          </p>
+            {" - "}
+            <span>Rs. {packageData.packageDiscountPrice}</span>
+          </span>
         ) : (
-          <p className="text-sm">Rs. {packageData.packagePrice}</p>
+          <span>Rs. {packageData.packagePrice}</span>
         )}
-      </p>
+      </div>
       <div>
         <h1 className="text-[#EB662B]">{packageData.packageName}</h1>
         <p className="text-center">{packageData.packageDestination}</p>
       </div>
-      <p>
-        {" "}
-        {(+packageData.packageDays > 0 || +packageData.packageNights > 0) && (
-          <p className="flex text-sm items-center gap-2 text-[#EB662B]">
+      <div className="flex text-sm items-center gap-2 text-[#EB662B]">
+        {(packageData.packageDays > 0 || packageData.packageNights > 0) && (
+          <>
             <FaClock />
-            {+packageData.packageDays > 0 &&
-              (+packageData.packageDays > 1
-                ? packageData.packageDays + " Days"
-                : packageData.packageDays + " Day")}
-            {+packageData.packageDays > 0 &&
-              +packageData.packageNights > 0 &&
+            {packageData.packageDays > 0 &&
+              (packageData.packageDays > 1
+                ? `${packageData.packageDays} Days`
+                : `${packageData.packageDays} Day`)}
+            {packageData.packageDays > 0 &&
+              packageData.packageNights > 0 &&
               " - "}
-            {+packageData.packageNights > 0 &&
-              (+packageData.packageNights > 1
-                ? packageData.packageNights + " Nights"
-                : packageData.packageNights + " Night")}
-          </p>
+            {packageData.packageNights > 0 &&
+              (packageData.packageNights > 1
+                ? `${packageData.packageNights} Nights`
+                : `${packageData.packageNights} Night`)}
+          </>
         )}
-      </p>
+      </div>
     </div>
   );
 };
+
 export default Offers;

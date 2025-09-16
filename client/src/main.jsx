@@ -4,13 +4,9 @@ import { Provider } from "react-redux";
 import { PersistGate } from "redux-persist/integration/react";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { init } from "emailjs-com";
 import App from "./App.jsx";
 import "./index.css";
 import { persistor, store } from "./redux/store.js";
-
-// Initialize EmailJS with your new User/Public Key
-init(import.meta.env.VITE_EMAILJS_USER_KEY || "pHsLwykSShL7KSIgm");
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>

@@ -1,40 +1,47 @@
-import express from 'express';
-import nodemailer from 'nodemailer';
-import cors from 'cors';
-import dotenv from 'dotenv';
+import express from "express";
+import authRoute from "./routes/auth.route.js";
+import userRoute from "./routes/user.route.js";
+import packageRoute from "./routes/package.route.js";
+import ratingRoute from "./routes/rating.route.js";
+import bookingRoute from "./routes/booking.route.js";
+import paymentRoutes from "./routes/payment.routes.js";
+import dotenv from "dotenv";
+import path from "path";
+import cors from "cors";
+import { connectDB } from "./config/connectDB.js";
+import cookieParser from "cookie-parser";
+import nodemailer from "nodemailer";
 
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+
+const __dirname = path.resolve();
 
 // Middleware
 app.use(
   cors({
-    origin: 'http://localhost:5173', // Your frontend URL
+    origin: "http://localhost:5173",
     credentials: true,
-    methods: ['GET', 'POST', 'OPTIONS'], // Include OPTIONS for preflight
+    methods: ['GET', 'POST', 'OPTIONS'],
     allowedHeaders: ['Content-Type'],
   })
 );
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
+app.use("/images", express.static("uploads"));
 
-// Test route to verify server is running
-app.get('/api/health', (req, res) => {
-  console.log('Health check requested');
-  res.status(200).json({ message: 'Server is running' });
-});
-
-// Nodemailer transporter configuration
+// Nodemailer setup
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
+  service: "gmail",
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
   },
 });
 
-// Verify Nodemailer configuration on startup
+// Verify Nodemailer configuration
 transporter.verify((error, success) => {
   if (error) {
     console.error('Nodemailer configuration error:', error.message, error.stack);
@@ -43,8 +50,8 @@ transporter.verify((error, success) => {
   }
 });
 
-// Endpoint to handle email sending
-app.post('/api/send-email', async (req, res) => {
+// Email sending endpoint
+app.post("/api/send-email", async (req, res) => {
   console.log('Received email request:', req.body);
   const { user_name, user_email, message } = req.body;
 
@@ -84,6 +91,45 @@ app.post('/api/send-email', async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+// Routes
+app.use("/api/auth", authRoute);
+app.use("/api/user", userRoute);
+app.use("/api/package", packageRoute);
+app.use("/api/rating", ratingRoute);
+app.use("/api/booking", bookingRoute);
+app.use("/payment", paymentRoutes);
+
+// Test route
+app.get('/api/health', (req, res) => {
+  console.log('Health check requested');
+  res.status(200).json({ message: 'Server is running' });
 });
+
+// Production mode
+if (process.env.NODE_ENV === "production") {
+  app.use(express.static(path.join(__dirname, "/client/dist")));
+  app.get("*", (req, res) => {
+    res.sendFile(path.join(__dirname, "client", "dist", "index.html"));
+  });
+} else {
+  app.use("/", (req, res) => {
+    res.send("Welcome to travel and tourism app");
+  });
+}
+
+// Start server
+const PORT = process.env.PORT || 5000;
+const startServer = async () => {
+  try {
+    await connectDB();
+    console.log("MongoDB connected successfully");
+    app.listen(PORT, () => {
+      console.log(`Server listening on port ${PORT}`);
+    });
+  } catch (error) {
+    console.error("Failed to connect to MongoDB:", error.message);
+    process.exit(1);
+  }
+};
+
+startServer();

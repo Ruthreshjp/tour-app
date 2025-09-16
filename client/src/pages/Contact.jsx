@@ -1,39 +1,56 @@
-import React, { useState } from 'react';
-import { motion } from 'framer-motion';
+import React, { useState } from "react";
+import { motion } from "framer-motion";
+import { toast } from "react-toastify";
 
 const Contact = () => {
   const [formData, setFormData] = useState({
-    user_name: '',
-    user_email: '',
-    message: '',
+    user_name: "",
+    user_email: "",
+    message: "",
   });
-
+  const [isLoading, setIsLoading] = useState(false);
   const [isSent, setIsSent] = useState(false);
-  const [error, setError] = useState(null);
 
   const sendEmail = async (e) => {
     e.preventDefault();
+    setIsLoading(true);
+    setIsSent(false);
+
+    // Validate form data
+    if (!formData.user_name.trim() || !formData.user_email.trim() || !formData.message.trim()) {
+      toast.error("Please fill out all fields!");
+      setIsLoading(false);
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.user_email)) {
+      toast.error("Please enter a valid email address!");
+      setIsLoading(false);
+      return;
+    }
+
     try {
-      const response = await fetch('http://localhost:5000/api/send-email', {
-        method: 'POST',
+      const response = await fetch("http://localhost:5000/api/send-email", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(formData),
       });
 
-      const data = await response.json();
+      const result = await response.json();
       if (response.ok) {
+        console.log("Email sent successfully:", result.message);
+        toast.success("Message sent successfully!");
         setIsSent(true);
-        setFormData({ user_name: '', user_email: '', message: '' });
-        setError(null);
-        console.log('Email sent successfully:', data);
+        setFormData({ user_name: "", user_email: "", message: "" });
       } else {
-        throw new Error(data.error || 'Failed to send email');
+        throw new Error(result.error || "Failed to send message");
       }
-    } catch (err) {
-      console.error('Frontend Error:', err.message);
-      setError(`Failed to send message: ${err.message}`);
+    } catch (error) {
+      console.error("Email send failed:", error);
+      toast.error(error.message || "Failed to send message. Please try again!");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -101,17 +118,15 @@ const Contact = () => {
             <motion.button
               type="submit"
               whileTap={{ scale: 0.95 }}
-              className="bg-[#EB662B] text-white font-semibold px-6 py-3 rounded-lg transition"
+              disabled={isLoading}
+              className="bg-[#EB662B] text-white font-semibold px-6 py-3 rounded-lg hover:bg-[#d15525] transition disabled:opacity-70"
             >
-              Send Message
+              {isLoading ? "Sending..." : "Send Message"}
             </motion.button>
             {isSent && (
               <p className="text-green-600 font-medium mt-3">
                 Message sent successfully!
               </p>
-            )}
-            {error && (
-              <p className="text-red-600 font-medium mt-3">{error}</p>
             )}
           </div>
         </form>

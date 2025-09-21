@@ -5,8 +5,8 @@ const About = () => {
   const navigate = useNavigate();
   return (
     <div>
-      <section className="w-full bg-white py-12 px-4 md:px-16">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center gap-10">
+      <section className="w-full bg-white py-6 px-4 md:px-16">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center gap-6">
           {/* Left Image Section */}
           <div className="w-full md:w-1/2">
             <img
@@ -34,7 +34,7 @@ const About = () => {
             </p>
             <button
               onClick={() => navigate("/search")}
-              className="mt-12 px-6 py-3 bg-[#EB662B] text-white rounded-lg hover:opacity-90 transition-all duration-300"
+              className="mt-6 px-6 py-3 bg-[#EB662B] text-white rounded-lg hover:opacity-90 transition-all duration-300"
             >
               Explore Tours
             </button>

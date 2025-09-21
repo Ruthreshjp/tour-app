@@ -5,6 +5,7 @@ import packageRoute from "./routes/package.route.js";
 import ratingRoute from "./routes/rating.route.js";
 import bookingRoute from "./routes/booking.route.js";
 import paymentRoutes from "./routes/payment.routes.js";
+import businessRoute  from "./routes/business.route.js";
 import dotenv from "dotenv";
 import path from "path";
 import cors from "cors";
@@ -20,8 +21,10 @@ const __dirname = path.resolve();
 // Middleware
 app.use(
   cors({
-    origin: "http://localhost:5173", // Allow requests from your frontend URL
-    credentials: true, // Allow cookies to be sent and received
+    origin: "http://localhost:5173",
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
   })
 );
 
@@ -37,6 +40,7 @@ app.use("/api/package", packageRoute);
 app.use("/api/rating", ratingRoute);
 app.use("/api/booking", bookingRoute);
 app.use("/payment", paymentRoutes);
+app.use("/api/business", businessRoute);
 
 // Production mode (serve static files from client build)
 if (process.env.NODE_ENV === "production") {

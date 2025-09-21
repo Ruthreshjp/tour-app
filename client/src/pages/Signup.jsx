@@ -53,20 +53,45 @@ const Signup = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Validate all required fields
+    if (!formData.username || !formData.email || !formData.password || !formData.address || !formData.phone) {
+      toast.error("All fields are required!");
+      return;
+    }
+
+    // Validate phone number
     if (formData.phone.length !== 11) {
       toast.error("Phone number must be 11 digits long.");
       return;
     }
+
+    // Validate password strength
+    if (passwordStrength === "Weak") {
+      toast.error("Please choose a stronger password");
+      return;
+    }
+
     try {
-      const res = await axios.post(`/api/auth/signup`, formData);
-      if (res?.data?.success) {
-        toast.success(res?.data?.message);
+      const res = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData)
+      });
+      
+      const data = await res.json();
+      
+      if (data?.success) {
+        toast.success(data?.message);
         navigate("/login");
       } else {
-        toast.error(res?.data?.message);
+        toast.error(data?.message || "Signup failed!");
       }
     } catch (error) {
-      console.log(error);
+      console.error("Signup error:", error);
+      toast.error("Server error occurred. Please try again later.");
     }
   };
 

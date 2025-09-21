@@ -16,7 +16,27 @@ router.post(
   "/add-package",
   requireSignIn,
   isAdmin,
-  upload.array("packageImages", 10),
+  (req, res, next) => {
+    upload.array("packageImages", 10)(req, res, (err) => {
+      if (err) {
+        if (err instanceof multer.MulterError) {
+          return res.status(400).json({
+            success: false,
+            message: err.code === 'LIMIT_FILE_SIZE' 
+              ? 'File is too large. Maximum size is 5MB'
+              : err.code === 'LIMIT_FILE_COUNT'
+              ? 'Too many files. Maximum is 10 files'
+              : err.message
+          });
+        }
+        return res.status(400).json({
+          success: false,
+          message: err.message
+        });
+      }
+      next();
+    });
+  },
   createPackage
 );
 

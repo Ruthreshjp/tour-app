@@ -5,6 +5,7 @@ import packageRoute from "./routes/package.route.js";
 import ratingRoute from "./routes/rating.route.js";
 import bookingRoute from "./routes/booking.route.js";
 import paymentRoutes from "./routes/payment.routes.js";
+import businessRoute from "./routes/business.route.js";
 import dotenv from "dotenv";
 import path from "path";
 import cors from "cors";
@@ -19,18 +20,28 @@ const app = express();
 const __dirname = path.resolve();
 
 // Middleware
-app.use(
-  cors({
-    origin: "http://localhost:5173",
-    credentials: true,
-    methods: ['GET', 'POST', 'OPTIONS'],
-    allowedHeaders: ['Content-Type'],
-  })
-);
+app.use(cookieParser());
+app.use(cors({
+  origin: "http://localhost:5173",
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
+  exposedHeaders: ['set-cookie'],
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use("/images", express.static("uploads"));
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error("Error:", err.message, err.stack);
+  res.status(err.status || 500).json({
+    success: false,
+    message: err.message || "Internal server error",
+    error: process.env.NODE_ENV === "development" ? err.stack : undefined
+  });
+});
 
 // Nodemailer setup
 const transporter = nodemailer.createTransport({
@@ -97,6 +108,7 @@ app.use("/api/user", userRoute);
 app.use("/api/package", packageRoute);
 app.use("/api/rating", ratingRoute);
 app.use("/api/booking", bookingRoute);
+app.use("/api/business", businessRoute);
 app.use("/payment", paymentRoutes);
 
 // Test route
@@ -118,7 +130,7 @@ if (process.env.NODE_ENV === "production") {
 }
 
 // Start server
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 8000;
 const startServer = async () => {
   try {
     await connectDB();

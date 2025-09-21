@@ -67,7 +67,7 @@ const Header = () => {
             </div>
 
             {/* Profile/Login */}
-            <div className="flex-1 flex justify-end items-center">
+            <div className="flex-1 flex justify-end items-center gap-4">
               {currentUser ? (
                 <Link
                   to={`/profile/${currentUser.user_role === 1 ? "admin" : "user"}`}

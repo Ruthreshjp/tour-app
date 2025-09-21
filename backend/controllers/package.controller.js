@@ -21,7 +21,15 @@ export const createPackage = async (req, res) => {
       packageOffer,
     } = req.body;
 
-    const imageFilenames = req.files ? req.files.map((file) => file.filename) : [];
+    // Handle image files
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "At least one image is required"
+      });
+    }
+
+    const imageFilenames = req.files.map((file) => file.filename);
 
     // Validation
     if (

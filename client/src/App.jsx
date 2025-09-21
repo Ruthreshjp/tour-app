@@ -1,3 +1,4 @@
+// src/App.jsx
 import { useState } from "react";
 import axios from "axios";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
@@ -9,7 +10,6 @@ import Profile from "./pages/Profile";
 import About from "./pages/About";
 import PrivateRoute from "./pages/Routes/PrivateRoute";
 import AdminDashboard from "./pages/admin/AdminDashboard";
-import AdminRoute from "./pages/Routes/AdminRoute";
 import UpdatePackage from "./pages/admin/UpdatePackage";
 import Package from "./pages/Package";
 import RatingsPage from "./pages/RatingsPage";
@@ -22,6 +22,15 @@ import Blog from "./pages/Blog";
 import Contact from "./pages/Contact";
 import "leaflet/dist/leaflet.css";
 import { FaRobot } from "react-icons/fa";
+import BusinessSignup from "./pages/business/BusinessSignup";
+import BusinessLogin from "./pages/business/BusinessLogin";
+import TravelOwn from "./pages/TravelOwn/TravelOwn";
+import Hotels from "./pages/TravelOwn/Hotels";
+import Restaurants from "./pages/TravelOwn/Restaurants";
+import Shopping from "./pages/TravelOwn/Shopping";
+import Cab from "./pages/TravelOwn/Cab";
+import CabBooking from "./pages/TravelOwn/CabBooking";
+import Cafe from "./pages/TravelOwn/Cafe";
 
 const App = () => {
   const [showModal, setShowModal] = useState(false);
@@ -57,7 +66,7 @@ const App = () => {
     <>
       <BrowserRouter>
         <Header />
-        <div className="max-w-7xl mx-auto py-24">
+        <div className="min-h-screen pt-[100px]">
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
@@ -65,22 +74,27 @@ const App = () => {
             <Route path="/search" element={<Search />} />
             <Route path="/blog" element={<Blog />} />
             <Route path="/contact" element={<Contact />} />
-            {/* user */}
+            <Route path="/business-login" element={<BusinessLogin />} />
+            <Route path="/business/signup" element={<BusinessSignup />} />
+            <Route path="/travel-own/*" element={<TravelOwn />}>
+              <Route index element={<Hotels />} />
+              <Route path="hotels" element={<Hotels />} />
+              <Route path="restaurants" element={<Restaurants />} />
+              <Route path="shopping" element={<Shopping />} />
+              <Route path="cab" element={<Cab />} />
+              <Route path="cab/:id/book" element={<CabBooking />} />
+              <Route path="cafe" element={<Cafe />} />
+            </Route>
             <Route path="/profile" element={<PrivateRoute />}>
               <Route path="user" element={<Profile />} />
-            </Route>
-            {/* admin */}
-            <Route path="/profile" element={<AdminRoute />}>
               <Route path="admin" element={<AdminDashboard />} />
-              <Route
-                path="admin/update-package/:id"
-                element={<UpdatePackage />}
-              />
+            </Route>
+            <Route path="/profile/admin/update-package/:id" element={<PrivateRoute />}>
+              <Route path="" element={<UpdatePackage />} />
             </Route>
             <Route path="/about" element={<About />} />
             <Route path="/package/:id" element={<Package />} />
             <Route path="/package/ratings/:id" element={<RatingsPage />} />
-            {/* checking user auth before booking */}
             <Route path="/booking" element={<PrivateRoute />}>
               <Route path=":packageId" element={<Booking />} />
             </Route>

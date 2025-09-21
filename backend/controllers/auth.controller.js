@@ -1,19 +1,20 @@
+// backend/controllers/auth.controller.js
 import User from "../models/user.model.js";
 import bcryptjs from "bcryptjs";
 import jwt from "jsonwebtoken";
 
-//test controller
+// Test controller
 export const test = (req, res) => {
   return res.send("Hello From Test!");
 };
 
-//signup controller
+// Signup controller
 export const signupController = async (req, res) => {
   try {
     const { username, email, password, address, phone } = req.body;
 
     if (!username || !email || !password || !address || !phone) {
-      return res.status(200).send({
+      return res.status(400).send({
         success: false,
         message: "All fields are required!",
       });
@@ -21,7 +22,7 @@ export const signupController = async (req, res) => {
 
     const userExists = await User.findOne({ email });
     if (userExists) {
-      return res.status(200).send({
+      return res.status(400).send({
         success: false,
         message: "User already exists please login",
       });
@@ -34,6 +35,7 @@ export const signupController = async (req, res) => {
       password: hashedPassword,
       address,
       phone,
+      user_role: 0, // Default to user
     });
 
     await newUser.save();
@@ -46,18 +48,18 @@ export const signupController = async (req, res) => {
     console.log(error);
     return res.status(500).send({
       success: false,
-      message: "Error is server!",
+      message: "Error in server!",
     });
   }
 };
 
-//login controller
+// Login controller
 export const loginController = async (req, res) => {
   try {
     const { email, password } = req.body;
 
     if (!email || !password) {
-      return res.status(200).send({
+      return res.status(400).send({
         success: false,
         message: "All fields are required!",
       });
@@ -72,19 +74,22 @@ export const loginController = async (req, res) => {
     }
     const validPassword = bcryptjs.compareSync(password, validUser.password);
     if (!validPassword) {
-      return res.status(200).send({
+      return res.status(400).send({
         success: false,
         message: "Invalid email or password",
       });
     }
 
-    const token = await jwt.sign({ id: validUser._id }, "bfuiwrht7895t5uith", {
-      expiresIn: "4d",
-    });
-    const { password: pass, ...rest } = validUser._doc; //deselcting password to send user(this will send all data accept password)
+    const token = jwt.sign(
+      { id: validUser._id, user_role: validUser.user_role },
+      process.env.JWT_SECRET || "bfuiwrht7895t5uith",
+      { expiresIn: "4d" }
+    );
+    const { password: pass, ...rest } = validUser._doc;
     res
       .cookie("X_TTMS_access_token", token, {
         httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
         maxAge: 4 * 24 * 60 * 60 * 1000,
       })
       .status(200)
@@ -92,12 +97,18 @@ export const loginController = async (req, res) => {
         success: true,
         message: "Login Success",
         user: rest,
+        token, // Include token in response
       });
   } catch (error) {
-    console.log(error);
+    console.error("Login error:", error);
+    return res.status(500).send({
+      success: false,
+      message: "Error logging in",
+    });
   }
 };
 
+// Logout controller
 export const logOutController = (req, res) => {
   try {
     res.clearCookie("X_TTMS_access_token");
@@ -106,6 +117,10 @@ export const logOutController = (req, res) => {
       message: "Logged out successfully",
     });
   } catch (error) {
-    console.log(error);
+    console.error("Logout error:", error);
+    return res.status(500).send({
+      success: false,
+      message: "Error logging out",
+    });
   }
 };

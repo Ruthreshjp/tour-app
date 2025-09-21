@@ -1,3 +1,4 @@
+// src/pages/admin/AdminDashboard.jsx
 import React, { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
@@ -22,12 +23,14 @@ import { app } from "../../firebase";
 import AllBookings from "./AllBookings";
 import AdminUpdateProfile from "./AdminUpdateProfile";
 import AddPackages from "./AddPackages";
-import "./styles/DashboardStyle.css";
 import AllPackages from "./AllPackages";
 import AllUsers from "./AllUsers";
 import Payments from "./Payments";
 import RatingsReviews from "./RatingsReviews";
 import History from "./History";
+import BusinessApprovals from "./BusinessApprovals";
+import BusinessManagement from "./BusinessManagement";
+import "./styles/DashboardStyle.css";
 import { toast } from "react-toastify";
 
 const AdminDashboard = () => {
@@ -78,7 +81,7 @@ const AdminDashboard = () => {
   const handleDeleteAccount = async (e) => {
     e.preventDefault();
     const CONFIRM = confirm(
-      "Are you sure ? the account will be permenantly deleted!"
+      "Are you sure ? the account will be permanently deleted!"
     );
     if (CONFIRM) {
       try {
@@ -102,8 +105,8 @@ const AdminDashboard = () => {
     <div className="flex w-full flex-wrap max-sm:flex-col gap-16 p-2">
       {currentUser ? (
         <>
-          <div className="w-[25%] p-3 max-sm:w-full ">
-            <div className="flex flex-col items-center gap-4 p-3  rounded-lg shadow-lg ">
+          <div className="w-[25%] p-3 max-sm:w-full">
+            <div className="flex flex-col items-center gap-4 p-3 rounded-lg shadow-lg">
               <div className="w-full flex flex-col items-center relative">
                 <img
                   src={
@@ -111,10 +114,9 @@ const AdminDashboard = () => {
                     formData.avatar
                   }
                   alt="Profile photo"
-                  className="w-36 h-36 object-cover rounded-full"
+                  className="w-37 h-37 object-cover rounded-full"
                 />
               </div>
-
               <p
                 style={{
                   width: "100%",
@@ -129,8 +131,8 @@ const AdminDashboard = () => {
               </p>
               <div className="w-full flex justify-between px-1">
                 <button
-                  onClick={() => setActivePanelId(8)}
-                  className="px-8  bg-[#EB662B] text-white text-base font-semibold  flex items-center justify-center my-3 border p-1 rounded-lg  hover:text-white"
+                  onClick={() => setActivePanelId(10)}
+                  className="px-8 bg-[#EB662B] text-white text-base font-semibold flex items-center justify-center my-3 border p-1 rounded-lg hover:text-white"
                 >
                   Edit Profile
                 </button>
@@ -155,14 +157,13 @@ const AdminDashboard = () => {
                 <div className="flex items-center justify-between">
                   <button
                     onClick={handleLogout}
-                    className="px-4  bg-[#6358DC] text-white text-sm font-semibold  flex items-center justify-center my-3 border p-1 rounded-lg  hover:text-white"
+                    className="px-4 bg-[#6358DC] text-white text-sm font-semibold flex items-center justify-center my-3 border p-1 rounded-lg hover:text-white"
                   >
                     Logout
                   </button>
-
                   <button
                     onClick={handleDeleteAccount}
-                    className=" px-4 py-1  bg-[#EB662B] text-white text-sm font-semibold  flex items-center justify-center my-3 border p-1 rounded-lg  hover:text-white"
+                    className="px-4 py-1 bg-[#EB662B] text-white text-sm font-semibold flex items-center justify-center my-3 border p-1 rounded-lg hover:text-white"
                   >
                     Delete account
                   </button>
@@ -170,7 +171,6 @@ const AdminDashboard = () => {
               </div>
             </div>
           </div>
-          {/* ---------------------------------------------------------------------------------------- */}
           <div className="w-[65%] max-sm:w-full">
             <div className="main-div">
               <nav className="w-full border-[#EB662B] border-b-4 py-3 overflow-x-auto navbar">
@@ -192,7 +192,7 @@ const AdminDashboard = () => {
                         ? "p-1 rounded-t transition-all duration-300 text-nowrap bg-[#EB662B] text-white"
                         : "p-1 rounded-t transition-all duration-300 text-nowrap"
                     }
-                    id="bookings"
+                    id="add-packages"
                     onClick={() => setActivePanelId(2)}
                   >
                     Add Packages
@@ -203,7 +203,7 @@ const AdminDashboard = () => {
                         ? "p-1 rounded-t transition-all duration-300 text-nowrap bg-[#EB662B] text-white"
                         : "p-1 rounded-t transition-all duration-300 text-nowrap"
                     }
-                    id="bookings"
+                    id="all-packages"
                     onClick={() => setActivePanelId(3)}
                   >
                     All Packages
@@ -214,7 +214,7 @@ const AdminDashboard = () => {
                         ? "p-1 rounded-t transition-all duration-300 text-nowrap bg-[#EB662B] text-white"
                         : "p-1 rounded-t transition-all duration-300 text-nowrap"
                     }
-                    id="bookings"
+                    id="users"
                     onClick={() => setActivePanelId(4)}
                   >
                     Users
@@ -225,7 +225,7 @@ const AdminDashboard = () => {
                         ? "p-1 rounded-t transition-all duration-300 text-nowrap bg-[#EB662B] text-white"
                         : "p-1 rounded-t transition-all duration-300 text-nowrap"
                     }
-                    id="bookings"
+                    id="payments"
                     onClick={() => setActivePanelId(5)}
                   >
                     Payments
@@ -236,7 +236,7 @@ const AdminDashboard = () => {
                         ? "p-1 rounded-t transition-all duration-300 text-nowrap bg-[#EB662B] text-white"
                         : "p-1 rounded-t transition-all duration-300 text-nowrap"
                     }
-                    id="bookings"
+                    id="ratings"
                     onClick={() => setActivePanelId(6)}
                   >
                     Ratings/Reviews
@@ -247,22 +247,44 @@ const AdminDashboard = () => {
                         ? "p-1 rounded-t transition-all duration-300 text-nowrap bg-[#EB662B] text-white"
                         : "p-1 rounded-t transition-all duration-300 text-nowrap"
                     }
-                    id="bookings"
+                    id="history"
                     onClick={() => setActivePanelId(7)}
                   >
                     History
                   </button>
-                  {/* <button
+                  <button
                     className={
-                      activePanelId === 7
-                        ? "p-1 rounded-t transition-all duration-300 text-nowrap bg-blue-500 text-white"
+                      activePanelId === 8
+                        ? "p-1 rounded-t transition-all duration-300 text-nowrap bg-[#EB662B] text-white"
                         : "p-1 rounded-t transition-all duration-300 text-nowrap"
                     }
-                    id="updateProfile"
-                    onClick={() => setActivePanelId(7)}
+                    id="business-approvals"
+                    onClick={() => setActivePanelId(8)}
+                  >
+                    Business Approvals
+                  </button>
+                  <button
+                    className={
+                      activePanelId === 9
+                        ? "p-1 rounded-t transition-all duration-300 text-nowrap bg-[#EB662B] text-white"
+                        : "p-1 rounded-t transition-all duration-300 text-nowrap"
+                    }
+                    id="business-management"
+                    onClick={() => setActivePanelId(9)}
+                  >
+                    Manage Businesses
+                  </button>
+                  <button
+                    className={
+                      activePanelId === 10
+                        ? "p-1 rounded-t transition-all duration-300 text-nowrap bg-[#EB662B] text-white"
+                        : "p-1 rounded-t transition-all duration-300 text-nowrap"
+                    }
+                    id="update-profile"
+                    onClick={() => setActivePanelId(10)}
                   >
                     Update Profile
-                  </button> */}
+                  </button>
                 </div>
               </nav>
               <div className="content-div flex flex-wrap my-5">
@@ -281,6 +303,10 @@ const AdminDashboard = () => {
                 ) : activePanelId === 7 ? (
                   <History />
                 ) : activePanelId === 8 ? (
+                  <BusinessApprovals />
+                ) : activePanelId === 9 ? (
+                  <BusinessManagement />
+                ) : activePanelId === 10 ? (
                   <AdminUpdateProfile />
                 ) : (
                   <div>Page Not Found!</div>

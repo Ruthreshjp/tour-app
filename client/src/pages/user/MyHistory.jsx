@@ -87,6 +87,7 @@ const MyHistory = () => {
                     className="w-12 h-12"
                     src={`http://localhost:8000/images/${booking?.packageDetails?.packageImages[0]}`}
                     alt="Package Image"
+                    onError={(e) => (e.target.src = 'https://placehold.co/48x48/e2e8f0/64748b?text=Package')}
                   />
                 </Link>
                 <Link to={`/package/${booking?.packageDetails?._id}`}>

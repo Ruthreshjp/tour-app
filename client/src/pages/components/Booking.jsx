@@ -1,13 +1,6 @@
-import destination from "../../assets/images/destination.png";
-import payment from "../../assets/images/payment.png";
-import vehicle from "../../assets/images/vehicle.png";
-import booking_right from "../../assets/images/booking_right.jpg";
+// Using public directory paths instead of asset imports
 import { motion } from "framer-motion";
-import logo1 from "../../assets/images/logo1.png";
-import logo2 from "../../assets/images/logo2.png";
-import logo3 from "../../assets/images/logo3.png";
-import logo4 from "../../assets/images/logo4.png";
-import logo5 from "../../assets/images/logo5.png";
+import { Image } from '../../components/Image';
 import { useState, useEffect } from "react";
 
 const Booking = () => {
@@ -23,20 +16,20 @@ const Booking = () => {
   const steps = [
     {
       id: 1,
-      image: destination,
+      image: "/images/destination.png",
       title: "Choose Destination",
       description:
         "Built Wicket longer admire do barton vanity itself do in it. ",
     },
     {
       id: 2,
-      image: payment,
+      image: "/images/payment.png",
       title: "Make Payment",
       description: "just make your payment and enjoy the trip",
     },
     {
       id: 3,
-      image: vehicle,
+      image: "/images/vehicle.png",
       title: "Reach AirPort on Selected Date",
       description: "Reach airport on selected date and enjoy your trip with us",
     },
@@ -83,7 +76,7 @@ const Booking = () => {
                 }}
               >
                 <div className="w-12 h-12 flex items-center justify-center">
-                  <img src={step.image} alt="" />
+                  <Image src={step.image} alt="" />
                 </div>
                 <div className="flex flex-col">
                   <h2 className="text-[#5E6282] text-lg font-semibold md:text-xl md:font-bold">
@@ -105,7 +98,7 @@ const Booking = () => {
           >
             <div className="max-w-[370px] w-full mx-auto h-[300px] bg-white rounded-md flex flex-col items-center px-3">
               <motion.img
-                src={booking_right}
+                src="/images/booking_right.jpg"
                 className="transition-transform hover:scale-105 duration-300 ease-in-out"
                 alt=""
                 initial={{ opacity: 0 }}
@@ -129,7 +122,7 @@ const Booking = () => {
 
         {/* logo section */}
         <div className="flex flex-wrap items-center justify-center gap-5 mt-16">
-          {[logo1, logo2, logo3, logo4, logo5].map((logo, index) =>
+          {["/images/logo1.png", "/images/logo2.png", "/images/logo3.png", "/images/logo4.png", "/images/logo5.png"].map((logo, index) =>
             isMobile ? (
               // No animation on mobile
               <img key={index} src={logo} alt="" className="max-w-[120px] w-full object-contain" />

@@ -1,60 +1,96 @@
 import jwt from "jsonwebtoken";
 import User from "../models/user.model.js";
 
-export const requireSignIn = (req, res, next) => {
+// Helper to extract token from request
+const getTokenFromRequest = (req) => {
+  // Check Authorization header first
+  const authHeader = req.headers?.authorization || req.headers?.Authorization;
+  if (authHeader?.startsWith('Bearer ')) {
+    return authHeader.substring(7);
+  }
+  
+  // Then check for cookie
+  return req.cookies?.X_TTMS_access_token;
+};
+
+// Verify JWT token and require sign in
+export const requireSignIn = async (req, res, next) => {
+  return verifyToken(req, res, next);
+};
+
+export const verifyToken = async (req, res, next) => {
   try {
-    const token = req.cookies?.X_TTMS_access_token;
-    console.log("Token extracted:", token ? "Present" : "Missing");
+    const token = getTokenFromRequest(req);
+    
     if (!token || typeof token !== "string" || token.trim() === "") {
-      console.log("Invalid token format:", token);
       return res.status(401).json({
         success: false,
-        message: "Unauthorized: Token not provided or invalid!",
+        message: "Authentication required"
       });
     }
-    const decoded = jwt.verify(token, "bfuiwrht7895t5uith");
-    console.log("Token decoded:", decoded);
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.user = decoded;
     next();
   } catch (error) {
-    console.error("JWT verification error:", error.message);
-    return res.status(403).json({
+    console.error('Token verification error:', error);
+    
+    // Specific error messages for different JWT errors
+    if (error.name === 'TokenExpiredError') {
+      return res.status(401).json({
+        success: false,
+        message: 'Session expired. Please log in again'
+      });
+    }
+    
+    if (error.name === 'JsonWebTokenError') {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid token. Please log in again'
+      });
+    }
+    
+    return res.status(401).json({
       success: false,
-      message: "Forbidden: Invalid or expired token",
+      message: 'Authentication failed'
     });
   }
 };
 
+// Verify admin role
 export const isAdmin = async (req, res, next) => {
   try {
-    console.log("Checking admin for user ID:", req.user?.id);
     if (!req.user?.id) {
       return res.status(401).json({
         success: false,
-        message: "Unauthorized: No user ID in token",
+        message: "Authentication required"
       });
     }
-    const user = await User.findById(req.user.id);
+
+    const user = await User.findById(req.user.id)
+      .select('role user_role');
+
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: "User not found",
+        message: "User not found"
       });
     }
-    console.log("User role:", user.user_role);
-    if (user.user_role === 1) {
+
+    // Support both role and user_role for backward compatibility
+    if (user.role === 'admin' || user.user_role === 1) {
       next();
     } else {
       return res.status(403).json({
         success: false,
-        message: "Forbidden: Admin access required",
+        message: "Admin access required"
       });
     }
   } catch (error) {
-    console.error("Admin middleware error:", error.message);
-    return res.status(500).json({
+    console.error('Admin verification error:', error);
+    res.status(500).json({
       success: false,
-      message: "Error in admin middleware",
+      message: 'Error verifying admin access'
     });
   }
 };

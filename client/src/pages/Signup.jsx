@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
-import loginImage from "../assets/images/login.png";
+// Using public directory path instead of asset import
 import { toast } from "react-toastify";
+import { Image } from '../components/Image';
 const Signup = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
@@ -107,7 +108,7 @@ const Signup = () => {
           {/* Form + Image Box */}
           <div className="flex flex-col md:flex-row gap-5  h-auto md:h-[600px] rounded-md items-center justify-center p-4">
             <div className="w-full md:w-1/2 flex justify-center">
-              <img src={loginImage} alt="Login" className="max-h-[300px]" />
+              <Image src="/images/login.png" alt="Login" className="max-h-[300px]" />
             </div>
 
             <form onSubmit={handleSubmit} className="w-full md:w-1/2 px-4">

@@ -1,10 +1,11 @@
 // src/pages/Login.jsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { loginStart, loginSuccess, loginFailure } from "../redux/user/userSlice.js";
+import { loginStart, loginSuccess, loginFailure, clearLoading } from "../redux/user/userSlice.js";
 import { useDispatch, useSelector } from "react-redux";
-import loginImage from "../assets/images/login.png";
+// Using public directory path instead of asset import
+import { Image } from '../components/Image';
 
 const Login = () => {
   const dispatch = useDispatch();
@@ -14,6 +15,11 @@ const Login = () => {
     email: "",
     password: "",
   });
+
+  // Clear any persistent loading state on component mount
+  useEffect(() => {
+    dispatch(clearLoading());
+  }, [dispatch]);
 
   const handleChange = (e) => {
     setFormData({
@@ -70,7 +76,7 @@ const Login = () => {
           </h1>
           <div className="flex flex-col md:flex-row gap-5 h-auto md:h-[450px] rounded-md items-center justify-center p-4">
             <div className="w-full md:w-1/2 flex justify-center">
-              <img src={loginImage} alt="Login" className="max-h-[300px]" />
+              <Image src="/images/login.png" alt="Login" className="max-h-[300px]" />
             </div>
             <form onSubmit={handleSubmit} className="w-full md:w-1/2 px-4">
               <div>
@@ -107,7 +113,7 @@ const Login = () => {
               <div className="border-t pt-4 mt-4">
                 <p className="text-center mb-4 font-medium">Business Account</p>
                 <div className="flex flex-col gap-2">
-                  <Link to="/business-login" className="w-full bg-[#EB662B] text-white p-3 rounded-md text-center hover:opacity-90">
+                  <Link to="/business/login" className="w-full bg-[#EB662B] text-white p-3 rounded-md text-center hover:opacity-90">
                     Business Login
                   </Link>
                 </div>

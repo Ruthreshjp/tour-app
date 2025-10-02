@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { toast } from 'react-toastify';
 import { FaMapMarkerAlt, FaMoneyBillWave } from 'react-icons/fa';
 import axios from 'axios';
+import { Image } from '../../components/Image';
 
 const CabBooking = ({ cabService }) => {
   const [bookingData, setBookingData] = useState({
@@ -9,6 +10,7 @@ const CabBooking = ({ cabService }) => {
     dropLocation: '',
     dateTime: '',
     passengers: 1,
+    currentLocation: null
   });
   const [showQR, setShowQR] = useState(false);
   const [qrCode, setQrCode] = useState('');
@@ -26,6 +28,28 @@ const CabBooking = ({ cabService }) => {
     window.open(location, '_blank');
   };
 
+  const getCurrentLocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          setBookingData(prev => ({
+            ...prev,
+            currentLocation: { lat: latitude, lng: longitude },
+            pickupLocation: `${latitude}, ${longitude}`
+          }));
+          toast.success('Current location detected!');
+        },
+        (error) => {
+          console.error('Error getting location:', error);
+          toast.error('Unable to get current location. Please enter manually.');
+        }
+      );
+    } else {
+      toast.error('Geolocation is not supported by this browser.');
+    }
+  };
+
   const generateQRCode = async (amount) => {
     try {
       const response = await axios.post('/api/payments/generate-qr', { amount });
@@ -39,31 +63,52 @@ const CabBooking = ({ cabService }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    if (!bookingData.pickupLocation || !bookingData.dropLocation || !bookingData.dateTime) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
+
     try {
+      setLoading(true);
+      
       // Calculate estimated fare based on distance
       const response = await axios.post('/api/bookings/cab/estimate', bookingData);
       const estimatedFare = response.data.estimatedFare;
 
-      // Generate QR code for payment
-      await generateQRCode(estimatedFare);
-
-      // Send booking request to business
-      await axios.post('/api/bookings/cab/request', {
-        ...bookingData,
-        cabServiceId: cabService._id,
-        estimatedFare
-      });
-
-      // Send email notification to business
-      await axios.post('/api/notifications/send-email', {
-        type: 'new_booking',
+      // Create booking using new system
+      const bookingResponse = await axios.post('/api/business-booking/create', {
         businessId: cabService._id,
-        bookingDetails: bookingData
+        businessType: 'cab',
+        bookingDetails: {
+          pickupLocation: bookingData.pickupLocation,
+          dropLocation: bookingData.dropLocation,
+          pickupTime: new Date(bookingData.dateTime),
+          passengers: parseInt(bookingData.passengers),
+          vehicleType: 'sedan', // Default, can be enhanced
+          currentLocation: bookingData.currentLocation
+        },
+        amount: estimatedFare,
+        specialRequests: ''
+      }, {
+        withCredentials: true
       });
 
-      toast.success('Booking request sent successfully');
+      if (bookingResponse.data.success) {
+        // Generate QR code for payment
+        await generateQRCode(estimatedFare);
+        
+        toast.success('Cab booking request submitted successfully!');
+        setAmount(estimatedFare);
+        setShowQR(true);
+      } else {
+        toast.error(bookingResponse.data.message || 'Booking failed');
+      }
     } catch (error) {
-      toast.error('Booking failed');
+      console.error('Cab booking error:', error);
+      toast.error(error.response?.data?.message || 'Booking failed');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -73,7 +118,7 @@ const CabBooking = ({ cabService }) => {
       
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700">Pickup Location</label>
+          <label className="block text-sm font-medium text-gray-700">Pickup Location *</label>
           <div className="mt-1 flex gap-2">
             <input
               type="text"
@@ -81,16 +126,29 @@ const CabBooking = ({ cabService }) => {
               value={bookingData.pickupLocation}
               onChange={handleChange}
               className="block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500"
+              placeholder="Enter pickup address or use current location"
               required
             />
             <button
               type="button"
-              onClick={() => handleViewMap(bookingData.pickupLocation)}
-              className="px-3 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600"
+              onClick={getCurrentLocation}
+              className="px-3 py-2 bg-green-500 text-white rounded-md hover:bg-green-600"
+              title="Use Current Location"
             >
               <FaMapMarkerAlt />
             </button>
+            <button
+              type="button"
+              onClick={() => handleViewMap(bookingData.pickupLocation)}
+              className="px-3 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600"
+              title="View on Map"
+            >
+              📍
+            </button>
           </div>
+          <p className="text-sm text-gray-500 mt-1">
+            Click the location icon to use your current location, or enter an address manually
+          </p>
         </div>
 
         <div>
@@ -156,7 +214,7 @@ const CabBooking = ({ cabService }) => {
             <h3 className="text-lg font-semibold mb-4">Scan QR to Pay</h3>
             <div className="flex flex-col items-center">
               <p className="mb-4">Amount: ₹{amount}</p>
-              <img src={qrCode} alt="Payment QR Code" className="w-64 h-64 mb-4" />
+              <Image src={qrCode} alt="Payment QR Code" className="w-64 h-64 mb-4" />
               <div className="flex gap-2">
                 <button
                   onClick={() => setShowQR(false)}

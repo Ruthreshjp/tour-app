@@ -1,35 +1,32 @@
-import t1 from "../../assets/images/t1.jpg";
-import t2 from "../../assets/images/t2.jpg";
-import t3 from "../../assets/images/t3.jpg";
-import t4 from "../../assets/images/t4.jpg";
+// Using public directory paths instead of asset imports
 import { motion } from "framer-motion";
 
 const Top = () => {
   const topSellings = [
     {
       id: 1,
-      image: t1,
+      image: "/images/t1.jpg",
       destination: "Lahore",
       price: "Rs. 1k",
       duration: "10 days",
     },
     {
       id: 2,
-      image: t2,
+      image: "/images/t2.jpg",
       destination: "Karachi",
       price: "Rs. 2k",
       duration: "5 days",
     },
     {
       id: 3,
-      image: t3,
+      image: "/images/t3.jpg",
       destination: "Murree",
       price: "Rs. 3k",
       duration: "13 days",
     },
     {
       id: 4,
-      image: t4,
+      image: "/images/t4.jpg",
       destination: "Islamabad",
       price: "Rs. 2.5k",
       duration: "13 days",

@@ -1,12 +1,57 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useSelector } from "react-redux";
-import defaultProfileImg from "../../assets/images/profile.png";
+// Using public directory path instead of asset import
 
 const Header = () => {
   const { currentUser } = useSelector((state) => state.user);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [businessUser, setBusinessUser] = useState(null);
   const location = useLocation();
+
+  useEffect(() => {
+    // Check for business user in localStorage
+    const checkBusinessUser = () => {
+      const businessData = localStorage.getItem('businessData');
+      const businessToken = localStorage.getItem('businessToken');
+      if (businessData && businessToken) {
+        setBusinessUser(JSON.parse(businessData));
+      } else {
+        setBusinessUser(null);
+      }
+    };
+
+    // Initial check
+    checkBusinessUser();
+
+    // Listen for storage changes (logout from other tabs/components)
+    const handleStorageChange = (e) => {
+      if (e.key === 'businessData' || e.key === 'businessToken') {
+        checkBusinessUser();
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Also listen for custom events for same-tab updates
+    const handleBusinessLogout = () => {
+      setBusinessUser(null);
+    };
+
+    window.addEventListener('businessLogout', handleBusinessLogout);
+
+    window.addEventListener("resize", () => {
+      if (window.innerWidth > 768) {
+        setMenuOpen(false);
+      }
+    });
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('businessLogout', handleBusinessLogout);
+    };
+  }, []);
+
   const activeLink = location.pathname;
   const linkClass = (path) =>
     `hover:underline hover:scale-105 transition-all duration-150 whitespace-nowrap ${
@@ -77,17 +122,29 @@ const Header = () => {
                     src={
                       currentUser?.avatar
                         ? `http://localhost:8000/images/${currentUser.avatar}`
-                        : defaultProfileImg
+                        : "/images/profile.png"
                     }
                     alt="avatar"
                     className="border w-10 h-10 border-white rounded-full"
                   />
                 </Link>
+              ) : businessUser ? (
+                <Link
+                  to="/business/dashboard"
+                  onClick={handleLinkClick}
+                  className="flex items-center gap-2 bg-orange-500 text-white px-4 py-2 rounded-full border border-gray-100 hover:bg-orange-600 transition-colors"
+                >
+                  <img
+                    src="/images/profile.png"
+                    alt="business avatar"
+                    className="border w-8 h-8 border-white rounded-full"
+                  />
+                  <span className="hidden sm:inline">Business</span>
+                </Link>
               ) : (
                 <Link
                   className="bg-orange-500 text-white px-8 py-2 rounded-full border border-gray-100"
                   to="/login"
-                  onClick={handleLinkClick}
                 >
                   Login
                 </Link>
@@ -147,13 +204,26 @@ const Header = () => {
                         src={
                           currentUser?.avatar
                             ? `http://localhost:8000/images/${currentUser.avatar}`
-                            : defaultProfileImg
+                            : "/images/profile.png"
                         }
                         alt="avatar"
                         className="border w-10 h-10 object-cover border-white rounded-full"
                       />
                       <span>Profile</span>
                     </div>
+                  </Link>
+                ) : businessUser ? (
+                  <Link
+                    to="/business/dashboard"
+                    onClick={handleLinkClick}
+                    className="flex items-center gap-2"
+                  >
+                    <img
+                      src="/images/profile.png"
+                      alt="business avatar"
+                      className="border w-10 h-10 object-cover border-white rounded-full"
+                    />
+                    <span>Business Dashboard</span>
                   </Link>
                 ) : (
                   <Link

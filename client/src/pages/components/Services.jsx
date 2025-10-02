@@ -1,35 +1,33 @@
-import weather from "../../assets/images/weather.png";
-import plane from "../../assets/images/plane.png";
-import event from "../../assets/images/event.png";
-import setting from "../../assets/images/setting.png";
+// Using public directory paths instead of asset imports
 import { motion } from "framer-motion";
+import { Image } from '../../components/Image';
 
 const Services = () => {
   const services = [
     {
       id: 1,
-      image: weather,
+      image: "/images/weather.png",
       title: "Calculated Weather",
       description:
         "Built Wicket longer admire do barton vanity itself do in it.",
     },
     {
       id: 2,
-      image: plane,
+      image: "/images/plane.png",
       title: "Best Flights ",
       description:
         "Engrossed listening. Park gate sell they west hard for the.",
     },
     {
       id: 3,
-      image: event,
+      image: "/images/event.png",
       title: "Local Events",
       description:
         "Barton vanity itself do in it. Preferd to men it engrossed listening. ",
     },
     {
       id: 4,
-      image: setting,
+      image: "/images/setting.png",
       title: "Customization",
       description:
         "We deliver outsourced aviation services for military customers",
@@ -61,7 +59,7 @@ const Services = () => {
                 transition: { duration: 0.3 },
               }}
             >
-              <img src={service.image} className="w-16 h-16" alt="" />
+              <Image src={service.image} className="w-16 h-16" alt="" />
               <h4 className="text-lg font-semibold">{service.title}</h4>
               <p className="max-w-[200px] w-full mx-auto text-sm text-center">
                 {service.description}

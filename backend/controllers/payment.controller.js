@@ -1,5 +1,11 @@
 import payment from "../payment.js";
 
+// Mock Braintree configuration for development
+const mockBraintreeConfig = {
+  clientToken: "sandbox_mock_client_token_12345",
+  environment: "sandbox"
+};
+
 export const paymentController = async (req, res) => {
   try {
     const { number, amount, cvc, exp_month, exp_year } = req.body;
@@ -59,6 +65,62 @@ export const paymentController = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Something went wrong while processing payment.",
+      error: error.message,
+    });
+  }
+};
+
+// Braintree Token Controller
+export const getBraintreeToken = async (req, res) => {
+  try {
+    // For development, return a mock client token
+    res.status(200).json({
+      success: true,
+      clientToken: mockBraintreeConfig.clientToken,
+      environment: mockBraintreeConfig.environment
+    });
+  } catch (error) {
+    console.error("🔥 BRAINTREE TOKEN ERROR:", error.message);
+    res.status(500).json({
+      success: false,
+      message: "Failed to generate Braintree client token",
+      error: error.message,
+    });
+  }
+};
+
+// Braintree Payment Controller
+export const processBraintreePayment = async (req, res) => {
+  try {
+    const { nonce, amount } = req.body;
+    
+    if (!nonce || !amount) {
+      return res.status(400).json({
+        success: false,
+        message: "Payment nonce and amount are required"
+      });
+    }
+
+    // Mock payment processing for development
+    const mockResult = {
+      id: `txn_${Date.now()}`,
+      status: "submitted_for_settlement",
+      amount: amount,
+      currencyIsoCode: "INR",
+      createdAt: new Date().toISOString()
+    };
+
+    res.status(200).json({
+      success: true,
+      message: "Payment processed successfully",
+      transaction: mockResult
+    });
+
+  } catch (error) {
+    console.error("🔥 BRAINTREE PAYMENT ERROR:", error.message);
+    res.status(500).json({
+      success: false,
+      message: "Payment processing failed",
       error: error.message,
     });
   }

@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 
 const Offers = ({ packageData }) => {
   return (
-    <div className="w-[260px] flex flex-col gap-2 items-center bg-white rounded-md py-2 shadow-sm transition-transform duration-300 hover:scale-105">
+    <div>
       <div>
         <Link
           to={`/package/${packageData._id}`}
@@ -13,6 +13,7 @@ const Offers = ({ packageData }) => {
             className="rounded-full w-20 h-20"
             src={`http://localhost:8000/images/${packageData.packageImages[0]}`}
             alt=""
+            onError={(e) => (e.target.src = 'https://placehold.co/80x80/e2e8f0/64748b?text=Offer')}
           />
         </Link>
       </div>

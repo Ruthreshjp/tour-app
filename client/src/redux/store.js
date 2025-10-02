@@ -1,9 +1,13 @@
 import { combineReducers, configureStore } from "@reduxjs/toolkit";
 import useReducer from "./user/userSlice.js";
+import businessReducer from "./business/businessSlice.js";
 import { persistReducer, persistStore } from "redux-persist";
 import storage from "redux-persist/lib/storage";
 
-const rootReducer = combineReducers({ user: useReducer });
+const rootReducer = combineReducers({ 
+  user: useReducer,
+  business: businessReducer 
+});
 
 const persistConfig = {
   key: "root",

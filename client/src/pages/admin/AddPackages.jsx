@@ -89,8 +89,8 @@ const AddPackages = () => {
     try {
       const method = id ? "put" : "post";
       const endpoint = id
-        ? `http://localhost:8000/api/package/update-package/${id}`
-        : `http://localhost:8000/api/package/add-package`;
+        ? `/api/package/update-package/${id}`
+        : `/api/package/add-package`;
 
       console.log(`Sending ${method.toUpperCase()} request to: ${endpoint}`);
 

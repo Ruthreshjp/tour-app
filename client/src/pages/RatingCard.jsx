@@ -3,10 +3,14 @@ import React from "react";
 import { FaArrowDown, FaArrowUp } from "react-icons/fa";
 
 const RatingCard = ({ packageRatings }) => {
-  console.log(packageRatings);
+  // Only log if there are ratings to avoid empty array spam
+  if (packageRatings && packageRatings.length > 0) {
+    console.log('Package Ratings:', packageRatings);
+  }
+  
   return (
     <>
-      {packageRatings &&
+      {packageRatings && packageRatings.length > 0 &&
         packageRatings.map((rating, i) => {
           return (
             <div

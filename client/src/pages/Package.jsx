@@ -240,7 +240,7 @@ const Package = () => {
                 delay: 2500,
                 disableOnInteraction: false,
               }}
-              loop={true}
+              loop={packageData.packageImages && packageData.packageImages.length > 1}
               className="w-full h-[300px] md:h-[400px]"
             >
               {packageData.packageImages.map((img, i) => (
@@ -277,7 +277,7 @@ const Package = () => {
             type="button"
             onClick={() => {
               if (currentUser) {
-                navigate(`/booking/${params?.id}`);
+                navigate(`/package/${params?.id}/book`);
               } else {
                 navigate("/login");
               }

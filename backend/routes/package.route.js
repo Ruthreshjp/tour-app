@@ -7,9 +7,14 @@ import {
   getPackages,
   updatePackage,
 } from "../controllers/package.controller.js";
+import { getBraintreeToken, processBraintreePayment } from "../controllers/payment.controller.js";
 import upload from "../middlewares/multer.js";
 
 const router = express.Router();
+
+// Braintree payment routes
+router.get("/braintree/token", getBraintreeToken);
+router.post("/braintree/payment", requireSignIn, processBraintreePayment);
 
 // Create package
 router.post(

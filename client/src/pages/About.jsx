@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import about from "../assets/images/about.jpg";
+// Using public directory path instead of asset import
 
 const About = () => {
   const navigate = useNavigate();
@@ -10,7 +10,7 @@ const About = () => {
           {/* Left Image Section */}
           <div className="w-full md:w-1/2">
             <img
-              src={about}
+              src="/images/about.jpg"
               alt="Travel adventure"
               className="w-full h-full rounded-lg shadow-md object-contain"
             />

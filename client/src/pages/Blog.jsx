@@ -1,8 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
-import blog1 from "../assets/images/b1.png";
-import blog2 from "../assets/images/b2.png";
-import blog3 from "../assets/images/b3.png";
+// Using public directory paths instead of asset imports
 import { Link } from "react-router-dom";
 const Blog = () => {
   return (
@@ -26,7 +24,7 @@ const Blog = () => {
             transition={{ duration: 0.5 }}
           >
             <img
-              src={blog1}
+              src="/images/b1.png"
               alt="Blog Image"
               className="w-full h-64 object-cover"
             />
@@ -53,7 +51,7 @@ const Blog = () => {
             transition={{ duration: 0.7 }}
           >
             <img
-              src={blog2}
+              src="/images/b2.png"
               alt="Blog Image"
               className="w-full h-64 object-cover"
             />
@@ -81,7 +79,7 @@ const Blog = () => {
             transition={{ duration: 0.9 }}
           >
             <img
-              src={blog3}
+              src="/images/b3.png"
               alt="Blog Image"
               className="w-full h-64 object-cover"
             />

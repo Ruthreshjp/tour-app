@@ -1,11 +1,24 @@
 import Stripe from "stripe";
-// ✅ Good (using env variable):
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
-// your secret key here
+// Lazy/safe Stripe initialization to avoid crashing server when key is missing
+let stripeInstance = null;
+const getStripe = () => {
+  const key = process.env.STRIPE_SECRET_KEY;
+  if (!key || typeof key !== "string" || key.trim() === "") {
+    return null;
+  }
+  if (!stripeInstance) {
+    stripeInstance = new Stripe(key);
+  }
+  return stripeInstance;
+};
 
 const payment = async (number, cvc, exp_month, exp_year, amount) => {
   try {
+    const stripe = getStripe();
+    if (!stripe) {
+      return { error: "Payment service not configured. Please set STRIPE_SECRET_KEY." };
+    }
     const paymentMethod = await stripe.paymentMethods.create({
       type: "card",
       card: {

@@ -28,7 +28,7 @@ This is my customized version of a **Travel & Tourism Management System** built 
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/YOUR-USERNAME/tour-app.git
+   git clone https://github.com/Ruthreshjp/tour-app.git
    cd tour-app
 =======
 # tour-app

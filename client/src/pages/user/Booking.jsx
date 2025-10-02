@@ -6,6 +6,7 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import Map from "../components/Map";
 import StripePayment from "../components/StripePayment";
+// import DropIn from "braintree-web-drop-in-react"; // Temporarily disabled
 
 const Booking = () => {
   const { currentUser } = useSelector((state) => state.user);
@@ -50,7 +51,7 @@ const Booking = () => {
     try {
       setLoading(true);
       const res = await fetch(
-        `/api/package/get-package-data/${params?.packageId}`
+        `/api/package/get-package-data/${params?.id}`
       );
       const data = await res.json();
       if (data?.success) {
@@ -109,7 +110,7 @@ const Booking = () => {
     try {
       setLoading(true);
       const res = await fetch(
-        `http://localhost:8000/api/booking/book-package/${params?.id}`,
+        `/api/booking/book-package/${params?.id}`,
         {
           method: "POST",
           headers: {
@@ -135,19 +136,19 @@ const Booking = () => {
   };
 
   useEffect(() => {
-    if (params?.packageId) {
+    if (params?.id) {
       getPackageData();
     }
     let date = new Date().toISOString().substring(0, 10);
     let d = date.substring(0, 8) + (parseInt(date.substring(8)) + 1);
     setCurrentDate(d);
-  }, [params?.packageId]);
+  }, [params?.id]);
 
   useEffect(() => {
-    if (packageData && params?.packageId) {
+    if (packageData && params?.id) {
       setBookingData({
         ...bookingData,
-        packageDetails: params?.packageId,
+        packageDetails: params?.id,
         buyer: currentUser?._id,
         totalPrice: packageData?.packageDiscountPrice
           ? packageData?.packageDiscountPrice * bookingData?.persons
@@ -356,13 +357,10 @@ const Booking = () => {
                 </p>
 
                 {clientToken && (
-                  <DropIn
-                    options={{
-                      authorization: clientToken,
-                      paypal: { flow: "vault" },
-                    }}
-                    onInstance={(instance) => setInstance(instance)}
-                  />
+                  <div className="p-4 bg-gray-100 rounded-lg text-center">
+                    <p className="text-sm text-gray-600">Payment Gateway Loading...</p>
+                    <p className="text-xs text-gray-500">You can still book without payment gateway</p>
+                  </div>
                 )}
 
                 {/* Show normal booking button regardless of instance */}

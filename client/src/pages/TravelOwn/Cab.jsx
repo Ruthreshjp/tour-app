@@ -1,86 +1,155 @@
-import React from 'react';
-import { FaMapMarkerAlt, FaPhone, FaStar, FaTaxi } from 'react-icons/fa';
+import React, { useState } from 'react';
+import BusinessList from '../components/BusinessList';
+import { FaTaxi, FaCar, FaUsers, FaSnowflake, FaRupeeSign } from 'react-icons/fa';
 
 const Cab = () => {
-  return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-gray-800">Cab Services</h2>
-        <div className="flex gap-2">
-          <input
-            type="text"
-            placeholder="Search cab services..."
-            className="px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
-          />
-          <select className="px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500">
-            <option value="">Filter by Type</option>
-            <option value="luxury">Luxury</option>
-            <option value="standard">Standard</option>
-            <option value="shared">Shared</option>
-          </select>
-        </div>
-      </div>
+  const [vehicleType, setVehicleType] = useState('');
+  const [capacity, setCapacity] = useState('');
+  const [isAC, setIsAC] = useState('');
 
-      {/* Cab Service List */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Sample Cab Service Card */}
-        <div className="border rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
-          <img
-            src="https://placehold.co/600x400"
-            alt="Cab Service"
-            className="w-full h-48 object-cover"
-          />
-          <div className="p-4">
-            <div className="flex justify-between items-start">
-              <h3 className="text-xl font-semibold">Cab Service Name</h3>
-              <div className="flex items-center">
-                <FaStar className="text-yellow-400" />
-                <span className="ml-1">4.5</span>
-              </div>
-            </div>
-            <div className="mt-2 space-y-2">
-              <div className="flex items-center text-gray-600">
-                <FaTaxi className="mr-2" />
-                <span>Luxury Cars Available</span>
-              </div>
-              <div className="flex items-center text-gray-600">
-                <FaMapMarkerAlt className="mr-2" />
-                <a 
-                  href="#" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="hover:text-orange-500"
-                >
-                  Service Area
-                </a>
-              </div>
-              <div className="flex items-center text-gray-600">
-                <FaPhone className="mr-2" />
-                <span>+1234567890</span>
-              </div>
-            </div>
-            <div className="mt-4">
-              <p className="text-gray-600">Starting from</p>
-              <p className="text-2xl font-bold text-orange-500">₹500/km</p>
-            </div>
-            <Link
-              to={`/travel-own/cab/${business._id}/book`}
-              className="mt-4 block w-full bg-orange-500 text-white py-2 px-4 rounded-md hover:bg-orange-600 transition-colors text-center"
-            >
-              Book Cab
-            </Link>
+  const renderCabInfo = (cab) => {
+    // Use new pricing structure first, fallback to old
+    const vehicles = cab.pricing?.vehicles || (Array.isArray(cab.vehicles) ? cab.vehicles : []);
+    
+    if (vehicles.length === 0) {
+      return (
+        <div className="space-y-2 text-gray-700">
+          <div className="flex items-center gap-2">
+            <FaTaxi />
+            <span>No vehicle information available</span>
           </div>
         </div>
+      );
+    }
+
+    const minPerKm = Math.min(...vehicles.map(v => Number(v.pricing?.perKm || v.pricePerKm || Infinity)).filter(p => Number.isFinite(p)));
+    const types = [...new Set(vehicles.map(v => v.vehicleType || v.type))];
+    
+    return (
+      <div className="space-y-3 text-gray-700">
+        <div className="flex items-center gap-2">
+          <FaTaxi className="text-yellow-500" />
+          <span>Types: {types.length ? types.join(', ') : '—'}</span>
+        </div>
+        
+        {Number.isFinite(minPerKm) && (
+          <div className="flex items-center gap-2">
+            <FaRupeeSign className="text-green-500" />
+            <span className="text-sm text-gray-500">Starting from</span>
+            <span className="font-semibold text-orange-600">₹{minPerKm}/km</span>
+          </div>
+        )}
+
+        {/* Enhanced Vehicle Display */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
+          {vehicles.slice(0, 4).map((vehicle, idx) => (
+            <div key={idx} className="p-2 bg-gray-50 rounded border">
+              <div className="flex justify-between items-center mb-1">
+                <div className="flex gap-1 flex-wrap">
+                  <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded">
+                    {vehicle.vehicleType || vehicle.type}
+                  </span>
+                  <span className="px-2 py-1 bg-purple-100 text-purple-700 rounded">
+                    {vehicle.capacity} seater
+                  </span>
+                  {vehicle.isAC && (
+                    <span className="px-2 py-1 bg-green-100 text-green-700 rounded">AC</span>
+                  )}
+                </div>
+              </div>
+              <div className="text-xs text-gray-600 space-y-1">
+                {(vehicle.pricing?.perKm || vehicle.pricePerKm) && (
+                  <div>₹{vehicle.pricing?.perKm || vehicle.pricePerKm}/km</div>
+                )}
+                {vehicle.pricing?.baseFare && (
+                  <div>Base: ₹{vehicle.pricing.baseFare}</div>
+                )}
+                {vehicle.pricing?.waitingCharges && (
+                  <div>Waiting: ₹{vehicle.pricing.waitingCharges}/hr</div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  // Enhanced filter function
+  const enhancedFilter = (cab) => {
+    let matches = true;
+    const vehicles = cab.pricing?.vehicles || (Array.isArray(cab.vehicles) ? cab.vehicles : []);
+    
+    if (vehicles.length === 0) return false;
+    
+    // Vehicle type filter
+    if (vehicleType && matches) {
+      matches = vehicles.some(v => (v.vehicleType || v.type) === vehicleType);
+    }
+    
+    // Capacity filter
+    if (capacity && matches) {
+      const requiredCapacity = Number(capacity);
+      matches = vehicles.some(v => v.capacity >= requiredCapacity);
+    }
+    
+    // AC filter
+    if (isAC && matches) {
+      const acRequired = isAC === 'true';
+      matches = vehicles.some(v => v.isAC === acRequired);
+    }
+    
+    return matches;
+  };
+
+  return (
+    <div className="container mx-auto px-4 py-8">
+      {/* Enhanced Filters */}
+      <div className="flex justify-end mb-4 gap-4 flex-wrap">
+        <select
+          className="px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+          value={vehicleType}
+          onChange={(e) => setVehicleType(e.target.value)}
+        >
+          <option value="">Vehicle Type</option>
+          <option value="hatchback">Hatchback</option>
+          <option value="sedan">Sedan</option>
+          <option value="suv">SUV</option>
+          <option value="luxury">Luxury</option>
+          <option value="tempo">Tempo Traveller</option>
+        </select>
+        
+        <select
+          className="px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+          value={capacity}
+          onChange={(e) => setCapacity(e.target.value)}
+        >
+          <option value="">Capacity</option>
+          <option value="4">4+ Seater</option>
+          <option value="6">6+ Seater</option>
+          <option value="7">7+ Seater</option>
+          <option value="8">8+ Seater</option>
+          <option value="12">12+ Seater</option>
+        </select>
+        
+        <select
+          className="px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+          value={isAC}
+          onChange={(e) => setIsAC(e.target.value)}
+        >
+          <option value="">AC Preference</option>
+          <option value="true">AC Only</option>
+          <option value="false">Non-AC Only</option>
+        </select>
       </div>
 
-      {/* Pagination */}
-      <div className="flex justify-center items-center space-x-2 mt-8">
-        <button className="px-4 py-2 border rounded-md hover:bg-orange-50">Previous</button>
-        <button className="px-4 py-2 bg-orange-500 text-white rounded-md">1</button>
-        <button className="px-4 py-2 border rounded-md hover:bg-orange-50">2</button>
-        <button className="px-4 py-2 border rounded-md hover:bg-orange-50">3</button>
-        <button className="px-4 py-2 border rounded-md hover:bg-orange-50">Next</button>
-      </div>
+      <BusinessList
+        businessType="cab"
+        title="Nearby Cab Services"
+        renderAdditionalInfo={renderCabInfo}
+        searchPlaceholder="Search cabs by name, area..."
+        extraFilter={enhancedFilter}
+      />
     </div>
   );
 };

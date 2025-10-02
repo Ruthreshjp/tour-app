@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Hotel API Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .result { margin: 10px 0; padding: 10px; border: 1px solid #ccc; }
+        .success { background-color: #d4edda; }
+        .error { background-color: #f8d7da; }
+        button { padding: 10px 20px; margin: 5px; }
+    </style>
+</head>
+<body>
+    <h1>Hotel API Test</h1>
+    
+    <button onclick="testBusinessAll()">Test /api/business/all</button>
+    <button onclick="testLocationSearch()">Test /api/location/search</button>
+    <button onclick="testLocationNearby()">Test /api/location/nearby</button>
+    
+    <div id="results"></div>
+
+    <script>
+        const resultsDiv = document.getElementById('results');
+        
+        function addResult(title, data, isError = false) {
+            const div = document.createElement('div');
+            div.className = `result ${isError ? 'error' : 'success'}`;
+            div.innerHTML = `
+                <h3>${title}</h3>
+                <pre>${JSON.stringify(data, null, 2)}</pre>
+            `;
+            resultsDiv.appendChild(div);
+        }
+        
+        async function testBusinessAll() {
+            try {
+                const response = await fetch('http://localhost:8000/api/business/all');
+                const data = await response.json();
+                addResult('Business All API', data);
+            } catch (error) {
+                addResult('Business All API Error', error.message, true);
+            }
+        }
+        
+        async function testLocationSearch() {
+            try {
+                const response = await fetch('http://localhost:8000/api/location/search?type=hotel');
+                const data = await response.json();
+                addResult('Location Search API', data);
+            } catch (error) {
+                addResult('Location Search API Error', error.message, true);
+            }
+        }
+        
+        async function testLocationNearby() {
+            try {
+                // Use dummy coordinates for testing
+                const response = await fetch('http://localhost:8000/api/location/nearby?lat=11.0168&lng=76.9558&type=hotel&radius=10000');
+                const data = await response.json();
+                addResult('Location Nearby API', data);
+            } catch (error) {
+                addResult('Location Nearby API Error', error.message, true);
+            }
+        }
+    </script>
+</body>
+</html>

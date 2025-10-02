@@ -1,5 +1,6 @@
 import Booking from "../models/booking.model.js";
 import Package from "../models/package.model.js";
+import Business from "../models/business.model.js";
 import { ObjectId } from "mongodb";
 
 //book package
@@ -274,5 +275,161 @@ export const cancelBooking = async (req, res) => {
     }
   } catch (error) {
     console.log(error);
+  }
+};
+
+// Business booking functions
+export const createBooking = async (req, res) => {
+  try {
+    const { businessId, businessType, bookingDetails, amount, specialRequests } = req.body;
+    const userId = req.user.id;
+
+    // Validate business exists
+    const business = await Business.findById(businessId);
+    if (!business) {
+      return res.status(404).json({
+        success: false,
+        message: "Business not found"
+      });
+    }
+
+    // Create booking
+    const newBooking = new Booking({
+      businessId,
+      userId,
+      businessType,
+      bookingDetails,
+      amount,
+      specialRequests,
+      status: 'pending',
+      paymentStatus: 'pending',
+      createdAt: new Date()
+    });
+
+    await newBooking.save();
+
+    res.status(201).json({
+      success: true,
+      message: "Booking request submitted successfully",
+      booking: newBooking
+    });
+  } catch (error) {
+    console.error("Create booking error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error occurred"
+    });
+  }
+};
+
+export const getUserBookings = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    
+    const bookings = await Booking.find({ userId })
+      .populate('businessId', 'businessName businessType contactPhone location')
+      .sort({ createdAt: -1 });
+
+    res.json({
+      success: true,
+      bookings
+    });
+  } catch (error) {
+    console.error("Get user bookings error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error occurred"
+    });
+  }
+};
+
+export const getBusinessBookings = async (req, res) => {
+  try {
+    const businessId = req.businessId;
+    
+    const bookings = await Booking.find({ businessId })
+      .populate('userId', 'username email phone')
+      .sort({ createdAt: -1 });
+
+    res.json({
+      success: true,
+      bookings
+    });
+  } catch (error) {
+    console.error("Get business bookings error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error occurred"
+    });
+  }
+};
+
+export const updateBookingStatus = async (req, res) => {
+  try {
+    const { bookingId } = req.params;
+    const { status, roomNumber } = req.body;
+    const businessId = req.businessId;
+
+    const booking = await Booking.findOne({ _id: bookingId, businessId });
+    if (!booking) {
+      return res.status(404).json({
+        success: false,
+        message: "Booking not found"
+      });
+    }
+
+    booking.status = status;
+    if (roomNumber) {
+      booking.roomNumber = roomNumber;
+    }
+    booking.updatedAt = new Date();
+
+    await booking.save();
+
+    res.json({
+      success: true,
+      message: `Booking ${status} successfully`,
+      booking
+    });
+  } catch (error) {
+    console.error("Update booking status error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error occurred"
+    });
+  }
+};
+
+export const updatePaymentStatus = async (req, res) => {
+  try {
+    const { bookingId } = req.params;
+    const { transactionId } = req.body;
+    const userId = req.user.id;
+
+    const booking = await Booking.findOne({ _id: bookingId, userId });
+    if (!booking) {
+      return res.status(404).json({
+        success: false,
+        message: "Booking not found"
+      });
+    }
+
+    booking.paymentStatus = 'paid';
+    booking.transactionId = transactionId;
+    booking.updatedAt = new Date();
+
+    await booking.save();
+
+    res.json({
+      success: true,
+      message: "Payment status updated successfully",
+      booking
+    });
+  } catch (error) {
+    console.error("Update payment status error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error occurred"
+    });
   }
 };

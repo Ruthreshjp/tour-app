@@ -6,9 +6,10 @@ import { motion } from "framer-motion";
 
 const SingleCard = ({ packageData }) => {
   // Fallback image if packageImages[0] fails to load
+  const defaultPlaceholder = 'https://placehold.co/600x400/e2e8f0/64748b?text=Travel+Package';
   const imageUrl = packageData?.packageImages?.[0]
     ? `http://localhost:8000/images/${packageData.packageImages[0]}`
-    : "/fallback-image.jpg"; // Replace with your fallback image path
+    : defaultPlaceholder;
 
   // Format duration
   const duration = [];
@@ -41,7 +42,7 @@ const SingleCard = ({ packageData }) => {
           src={imageUrl}
           alt={packageData?.packageName || "Travel Package"}
           className="w-full h-[140px] object-cover"
-          onError={(e) => (e.target.src = "/fallback-image.jpg")} // Fallback on error
+          onError={(e) => (e.target.src = defaultPlaceholder)} // Fallback on error
         />
       </Link>
 

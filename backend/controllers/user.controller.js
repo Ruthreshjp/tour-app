@@ -18,10 +18,17 @@ export const updateUser = async (req, res) => {
       phone: req.body.phone,
     };
 
+    // Handle UPI ID - allow empty string or null
+    if (req.body.upiId !== undefined) {
+      updatedFields.upiId = req.body.upiId || null;
+    }
+
     // Check if a new avatar was uploaded
     if (req.file) {
       updatedFields.avatar = req.file.filename; // Or `req.file.path` depending on your multer config
     }
+
+    console.log('Updating user with fields:', updatedFields); // Debug log
 
     const updatedUser = await User.findByIdAndUpdate(
       req.params.id,
@@ -159,3 +166,4 @@ export const deleteUserAccountAdmin = async (req, res, next) => {
     console.log(error);
   }
 };
+

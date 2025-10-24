@@ -6,6 +6,7 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import Map from "../components/Map";
 import StripePayment from "../components/StripePayment";
+import PackagePayment from "../components/PackagePayment";
 // import DropIn from "braintree-web-drop-in-react"; // Temporarily disabled
 
 const Booking = () => {
@@ -42,7 +43,10 @@ const Booking = () => {
     buyer: null,
     persons: 1,
     date: null,
+    paymentOption: 'advance', // 'advance' (50%) or 'full'
   });
+  const [showPayment, setShowPayment] = useState(false);
+  const [currentBooking, setCurrentBooking] = useState(null);
   const [clientToken, setClientToken] = useState("");
   const [instance, setInstance] = useState("");
   const [currentDate, setCurrentDate] = useState("");
@@ -95,44 +99,89 @@ const Booking = () => {
     getToken();
   }, [currentUser]);
 
-  //handle payment & book package
+  //handle book package with payment options
   const handleBookPackage = async () => {
     if (
-      bookingData.packageDetails === "" ||
-      bookingData.buyer === "" ||
-      bookingData.totalPrice <= 0 ||
-      bookingData.persons <= 0 ||
-      bookingData.date === ""
+      !bookingData.date ||
+      bookingData.persons <= 0
     ) {
-      alert("All fields are required!");
+      toast.error("Please select date and number of persons!");
       return;
     }
+
+    // Show no-refund confirmation
+    const confirmBooking = window.confirm(
+      '⚠️ Booking Confirmation\n\n' +
+      '• NO REFUND on cancellation\n' +
+      '• Payment is non-refundable\n' +
+      '• Please review your booking details carefully\n\n' +
+      'Do you want to proceed with the booking?'
+    );
+
+    if (!confirmBooking) {
+      return;
+    }
+
     try {
       setLoading(true);
+      const totalAmount = packageData?.packageDiscountPrice
+        ? packageData?.packageDiscountPrice * bookingData?.persons
+        : packageData?.packagePrice * bookingData?.persons;
+      
+      const advanceAmount = Math.ceil(totalAmount * 0.5); // 50% advance
+      const paymentAmount = bookingData.paymentOption === 'advance' ? advanceAmount : totalAmount;
+
       const res = await fetch(
-        `/api/booking/book-package/${params?.id}`,
+        `/api/package-booking/create`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
           credentials: "include",
-          body: JSON.stringify(bookingData),
+          body: JSON.stringify({
+            packageId: params?.id,
+            travelDate: bookingData.date,
+            numberOfPeople: bookingData.persons,
+            contactName: currentUser.username,
+            contactPhone: currentUser.phone,
+            contactEmail: currentUser.email,
+            specialRequests: bookingData.paymentOption === 'advance' 
+              ? `Advance payment of ₹${advanceAmount} (50%). Remaining ₹${totalAmount - advanceAmount} to be paid later.`
+              : `Full payment of ₹${totalAmount} made.`,
+            totalAmount: paymentAmount,
+            paymentOption: bookingData.paymentOption
+          }),
         }
       );
       const data = await res.json();
       if (data?.success) {
         setLoading(false);
-        toast.success(data?.message);
-        navigate(`/profile/${currentUser?.user_role === 1 ? "admin" : "user"}`);
+        setCurrentBooking(data.booking);
+        setShowPayment(true);
+        toast.success("🎉 Booking created! Please complete the payment.");
       } else {
         setLoading(false);
-        toast.error(data?.message);
+        toast.error(data?.message || "Booking failed");
       }
     } catch (error) {
       console.log(error);
       setLoading(false);
+      toast.error("Failed to create booking");
     }
+  };
+
+  const handlePaymentComplete = (updatedBooking) => {
+    toast.success("✅ Payment submitted! Waiting for admin verification.");
+    setShowPayment(false);
+    setCurrentBooking(null);
+    navigate(`/profile/${currentUser?.user_role === 1 ? "admin" : "user"}`);
+  };
+
+  const handlePaymentClose = () => {
+    setShowPayment(false);
+    toast.info("You can complete payment from your bookings page.");
+    navigate(`/profile/${currentUser?.user_role === 1 ? "admin" : "user"}`);
   };
 
   useEffect(() => {
@@ -348,36 +397,87 @@ const Booking = () => {
                     : packageData.packagePrice * bookingData.persons}
                 </span>
               </p>
-              <div className="my-2 max-w-[300px] gap-1">
-                <p className="font-semibold">
-                  Payment:
-                  {!instance
-                    ? " Instance not ready. You can still book the package manually."
-                    : " Don't use your real card details (This is not production)."}
-                </p>
 
-                {clientToken && (
-                  <div className="p-4 bg-gray-100 rounded-lg text-center">
-                    <p className="text-sm text-gray-600">Payment Gateway Loading...</p>
-                    <p className="text-xs text-gray-500">You can still book without payment gateway</p>
-                  </div>
-                )}
-
-                {/* Show normal booking button regardless of instance */}
-                <button
-                  className="p-2 mt-2 rounded bg-[#EB662B] text-white payment-btn disabled:optional:80 hover:opacity-95 cursor-pointer"
-                  onClick={handleBookPackage}
-                  disabled={loading || !currentUser?.address}
-                >
-                  {loading ? "Processing..." : "Book Now"}
-                </button>
+              {/* Payment Options */}
+              <div className="my-3 max-w-[300px]">
+                <p className="text-sm font-semibold mb-2">Payment Option:</p>
+                <div className="space-y-2">
+                  <label className="flex items-center p-3 border-2 rounded-lg cursor-pointer hover:bg-gray-50 transition"
+                    style={{ borderColor: bookingData.paymentOption === 'advance' ? '#EB662B' : '#e5e7eb' }}>
+                    <input
+                      type="radio"
+                      name="paymentOption"
+                      value="advance"
+                      checked={bookingData.paymentOption === 'advance'}
+                      onChange={(e) => setBookingData({ ...bookingData, paymentOption: e.target.value })}
+                      className="mr-3"
+                    />
+                    <div>
+                      <p className="font-semibold text-sm">Pay 50% Advance</p>
+                      <p className="text-xs text-gray-600">
+                        ₹{Math.ceil((packageData.packageDiscountPrice || packageData.packagePrice) * bookingData.persons * 0.5)} now, 
+                        ₹{Math.floor((packageData.packageDiscountPrice || packageData.packagePrice) * bookingData.persons * 0.5)} later
+                      </p>
+                    </div>
+                  </label>
+                  
+                  <label className="flex items-center p-3 border-2 rounded-lg cursor-pointer hover:bg-gray-50 transition"
+                    style={{ borderColor: bookingData.paymentOption === 'full' ? '#EB662B' : '#e5e7eb' }}>
+                    <input
+                      type="radio"
+                      name="paymentOption"
+                      value="full"
+                      checked={bookingData.paymentOption === 'full'}
+                      onChange={(e) => setBookingData({ ...bookingData, paymentOption: e.target.value })}
+                      className="mr-3"
+                    />
+                    <div>
+                      <p className="font-semibold text-sm">Pay Full Amount</p>
+                      <p className="text-xs text-gray-600">
+                        ₹{(packageData.packageDiscountPrice || packageData.packagePrice) * bookingData.persons} now
+                      </p>
+                    </div>
+                  </label>
+                </div>
               </div>
-              <StripePayment />
+
+              <div className="my-2 max-w-[300px] gap-1">
+                <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-3">
+                  <p className="text-sm text-red-800 font-semibold mb-1">
+                    ⚠️ No Refund Policy
+                  </p>
+                  <p className="text-xs text-red-600">
+                    All payments are non-refundable. Please review your booking carefully before confirming.
+                  </p>
+                </div>
+
+                {/* Show booking button */}
+                <button
+                  className="w-full p-3 rounded bg-[#EB662B] text-white font-semibold disabled:opacity-50 hover:opacity-95 cursor-pointer transition"
+                  onClick={handleBookPackage}
+                  disabled={loading || !currentUser?.address || !bookingData.date}
+                >
+                  {loading ? "Processing..." : "Book & Pay Now"}
+                </button>
+                
+                {!currentUser?.address && (
+                  <p className="text-xs text-red-500 mt-2">
+                    Please update your address in profile to book
+                  </p>
+                )}
+              </div>
             </div>
           </div>
         </div>
       </div>
       {showMap && <Map destinationName={packageData.packageDestination} />}
+      {showPayment && currentBooking && (
+        <PackagePayment
+          booking={currentBooking}
+          onClose={handlePaymentClose}
+          onPaymentComplete={handlePaymentComplete}
+        />
+      )}
     </div>
   );
 };

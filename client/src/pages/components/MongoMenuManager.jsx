@@ -123,7 +123,7 @@ const MongoMenuManager = ({ businessType, initialMenu = {}, onMenuChange, busine
       name: '',
       description: '',
       category: 'main-course',
-      price: '',
+      price: '0',
       isVeg: true,
       isAvailable: true,
       ingredients: '',
@@ -180,14 +180,15 @@ const MongoMenuManager = ({ businessType, initialMenu = {}, onMenuChange, busine
   ];
 
   // Only show for restaurants and cafes
-  if (!['Restaurant', 'Cafe'].includes(businessType)) {
+  const normalizedBusinessType = businessType?.toLowerCase();
+  if (!['restaurant', 'cafe'].includes(normalizedBusinessType)) {
     return null;
   }
 
   return (
     <div className="space-y-6">
       <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
-        {businessType === 'Restaurant' ? <FaUtensils className="text-orange-500" /> : <FaCoffee className="text-brown-500" />}
+        {normalizedBusinessType === 'restaurant' ? <FaUtensils className="text-orange-500" /> : <FaCoffee className="text-brown-500" />}
         Menu Management
       </h3>
 
@@ -310,7 +311,7 @@ const MongoMenuManager = ({ businessType, initialMenu = {}, onMenuChange, busine
                       {editingItem === item.id ? (
                         <input
                           type="text"
-                          value={item.name}
+                          value={item.name || ''}
                           onChange={(e) => updateMenuItem(item.id, 'name', e.target.value)}
                           className="w-full p-1 border rounded text-sm"
                           placeholder="Item name"
@@ -322,7 +323,7 @@ const MongoMenuManager = ({ businessType, initialMenu = {}, onMenuChange, busine
                     <td className="px-4 py-2">
                       {editingItem === item.id ? (
                         <select
-                          value={item.category}
+                          value={item.category || 'main-course'}
                           onChange={(e) => updateMenuItem(item.id, 'category', e.target.value)}
                           className="w-full p-1 border rounded text-sm"
                         >
@@ -342,7 +343,7 @@ const MongoMenuManager = ({ businessType, initialMenu = {}, onMenuChange, busine
                       {editingItem === item.id ? (
                         <input
                           type="number"
-                          value={item.price}
+                          value={item.price || '0'}
                           onChange={(e) => updateMenuItem(item.id, 'price', e.target.value)}
                           className="w-full p-1 border rounded text-sm"
                           placeholder="Price"
@@ -354,7 +355,7 @@ const MongoMenuManager = ({ businessType, initialMenu = {}, onMenuChange, busine
                     <td className="px-4 py-2">
                       {editingItem === item.id ? (
                         <select
-                          value={item.isVeg}
+                          value={item.isVeg !== undefined ? item.isVeg : true}
                           onChange={(e) => updateMenuItem(item.id, 'isVeg', e.target.value === 'true')}
                           className="w-full p-1 border rounded text-sm"
                         >
@@ -374,7 +375,7 @@ const MongoMenuManager = ({ businessType, initialMenu = {}, onMenuChange, busine
                     <td className="px-4 py-2">
                       {editingItem === item.id ? (
                         <select
-                          value={item.isAvailable}
+                          value={item.isAvailable !== undefined ? item.isAvailable : true}
                           onChange={(e) => updateMenuItem(item.id, 'isAvailable', e.target.value === 'true')}
                           className="w-full p-1 border rounded text-sm"
                         >

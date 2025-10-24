@@ -1,11 +1,17 @@
 import React, { useState } from 'react';
-import { FaUtensils, FaClock, FaDollarSign, FaTable, FaImage, FaEye } from 'react-icons/fa';
+import { FaUtensils, FaClock, FaDollarSign, FaTable } from 'react-icons/fa';
 import BusinessList from '../components/BusinessList';
+import RestaurantDetailsModal from '../components/RestaurantDetailsModal';
+import RestaurantBooking from '../components/RestaurantBooking';
+import { toast } from 'react-toastify';
 
 const Restaurants = () => {
   const [tableSize, setTableSize] = useState('');
   const [isAC, setIsAC] = useState('');
-  const [showMenuModal, setShowMenuModal] = useState(null);
+
+  const handleBookingSuccess = (booking) => {
+    toast.success('Table booked successfully!');
+  };
   
   // Function to render restaurant-specific information
   const renderRestaurantInfo = (restaurant) => (
@@ -59,35 +65,6 @@ const Restaurants = () => {
         </div>
       )}
 
-      {/* Menu Cards Display */}
-      {restaurant.menu?.menuCardImages && restaurant.menu.menuCardImages.length > 0 && (
-        <div className="mt-3">
-          <h4 className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-1">
-            <FaImage className="text-orange-500" />
-            Menu Cards
-          </h4>
-          <div className="flex gap-2 flex-wrap">
-            {restaurant.menu.menuCardImages.slice(0, 3).map((image, idx) => (
-              <div key={idx} className="relative">
-                <img
-                  src={image}
-                  alt={`Menu ${idx + 1}`}
-                  className="w-16 h-16 object-cover rounded cursor-pointer hover:opacity-80"
-                  onClick={() => setShowMenuModal({ restaurant, imageIndex: idx })}
-                />
-                <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 bg-black bg-opacity-50 rounded transition-opacity">
-                  <FaEye className="text-white text-sm" />
-                </div>
-              </div>
-            ))}
-            {restaurant.menu.menuCardImages.length > 3 && (
-              <div className="w-16 h-16 bg-gray-200 rounded flex items-center justify-center text-xs text-gray-600">
-                +{restaurant.menu.menuCardImages.length - 3}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
 
       {/* Popular Menu Items */}
       {restaurant.menu?.items && restaurant.menu.items.length > 0 && (
@@ -177,30 +154,11 @@ const Restaurants = () => {
         renderAdditionalInfo={renderRestaurantInfo}
         searchPlaceholder="Search restaurants by name, cuisine..."
         extraFilter={enhancedFilter}
+        DetailsModal={RestaurantDetailsModal}
+        BookingModal={RestaurantBooking}
+        onBookingSuccess={handleBookingSuccess}
       />
 
-      {/* Menu Modal */}
-      {showMenuModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
-          <div className="max-w-4xl max-h-4xl relative">
-            <img 
-              src={showMenuModal.restaurant.menu.menuCardImages[showMenuModal.imageIndex]} 
-              alt="Menu Card" 
-              className="max-w-full max-h-full object-contain"
-            />
-            <button
-              onClick={() => setShowMenuModal(null)}
-              className="absolute top-4 right-4 text-white text-2xl hover:text-gray-300 bg-black bg-opacity-50 rounded-full w-10 h-10 flex items-center justify-center"
-            >
-              ×
-            </button>
-            <div className="absolute bottom-4 left-4 right-4 bg-black bg-opacity-75 text-white p-4 rounded">
-              <h3 className="text-lg font-semibold">{showMenuModal.restaurant.businessName || showMenuModal.restaurant.name}</h3>
-              <p className="text-sm">Menu Card {showMenuModal.imageIndex + 1} of {showMenuModal.restaurant.menu.menuCardImages.length}</p>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

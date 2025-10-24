@@ -36,6 +36,11 @@ const Login = () => {
     }
     try {
       dispatch(loginStart());
+      
+      // Clear any existing business session before user login
+      localStorage.removeItem("businessToken");
+      localStorage.removeItem("businessData");
+      
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: {

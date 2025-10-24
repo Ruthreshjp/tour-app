@@ -56,7 +56,7 @@ router.post('/test-upload', uploadMultiple, async (req, res) => {
 });
 
 // Upload single image
-router.post('/upload/single', uploadSingle, async (req, res) => {
+router.post('/upload/single', uploadSingle, processImage, async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({
@@ -103,7 +103,7 @@ router.post('/upload/single', uploadSingle, async (req, res) => {
 });
 
 // Upload multiple images
-router.post('/upload/multiple', uploadMultiple, async (req, res) => {
+router.post('/upload/multiple', uploadMultiple, processImage, async (req, res) => {
   try {
     console.log('Multiple upload request received');
     console.log('Files:', req.files?.length || 0);

@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useDispatch, useSelector } from "react-redux";
 import { setLoading, loginSuccess, setError, clearError } from "../../redux/business/businessSlice.js";
+import { logOutSuccess } from "../../redux/user/userSlice.js";
 // Using public directory path instead of asset import
 import { Image } from '../../components/Image';
 
@@ -145,6 +146,13 @@ const BusinessLogin = () => {
 
     try {
       dispatch(setLoading(true));
+      
+      // Clear any existing user session before business login
+      dispatch(logOutSuccess());
+      localStorage.removeItem("userToken");
+      localStorage.removeItem("adminToken");
+      localStorage.removeItem("persist:root");
+      
       const res = await fetch("http://localhost:8000/api/business/login", {
         method: "POST",
         headers: {

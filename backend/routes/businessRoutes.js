@@ -7,7 +7,6 @@ import {
   sendLoginCode,
   verifyLoginCode,
   loginBusiness,
-  quickLoginBusiness,
   getBusinessProfile,
   checkAuth,
   logoutBusiness,
@@ -36,7 +35,13 @@ import {
   createCategory,
   updateCategory,
   deleteCategory,
-  getAllHotels
+  getAllHotels,
+  getBusinessStats,
+  getBusinessNotifications,
+  getVehicles,
+  createVehicle,
+  updateVehicle,
+  deleteVehicle
 } from "../controllers/business.controller.js";
 
 const router = express.Router();
@@ -47,10 +52,10 @@ router.post("/check-email", checkEmail);
 router.post("/send-login-code", sendLoginCode);
 router.post("/verify-code", verifyLoginCode);
 router.post("/login", loginBusiness);
-router.post("/quick-login", quickLoginBusiness);
 
 // Admin routes (require admin authentication)
 router.get("/admin/businesses", verifyToken, isAdmin, getAllBusinessesForAdmin);
+router.get("/admin/businesses/:businessId/stats", verifyToken, isAdmin, getBusinessStats);
 router.put("/admin/businesses/:businessId/status", verifyToken, isAdmin, updateBusinessStatus);
 router.delete("/admin/businesses/:businessId", verifyToken, isAdmin, deleteBusinessForAdmin);
 
@@ -59,6 +64,7 @@ router.get("/profile", businessAuth, getBusinessProfile);
 router.get("/check-auth", businessAuth, checkAuth);
 router.post("/logout", businessAuth, logoutBusiness);
 router.post("/setup", businessAuth, setupBusiness);
+router.get("/notifications", businessAuth, getBusinessNotifications);
 
 // Room management routes
 router.get("/rooms/:businessId", businessAuth, getRooms);
@@ -90,6 +96,12 @@ router.get("/categories/:businessId", businessAuth, getCategories);
 router.post("/categories", businessAuth, createCategory);
 router.put("/categories/:categoryId", businessAuth, updateCategory);
 router.delete("/categories/:categoryId", businessAuth, deleteCategory);
+
+// Vehicle management routes (for cab)
+router.get("/vehicles/:businessId", businessAuth, getVehicles);
+router.post("/vehicles", businessAuth, createVehicle);
+router.put("/vehicles/:vehicleId", businessAuth, updateVehicle);
+router.delete("/vehicles/:vehicleId", businessAuth, deleteVehicle);
 
 // Public route to get all approved hotels for travel components
 router.get("/all", getAllHotels);

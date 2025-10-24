@@ -43,7 +43,15 @@ const HotelListingManager = () => {
   const fetchRooms = async () => {
     try {
       setLoading(true);
+      const businessToken = localStorage.getItem('businessToken');
+      const headers = {};
+      
+      if (businessToken) {
+        headers.Authorization = `Bearer ${businessToken}`;
+      }
+      
       const response = await fetch(`/api/business/rooms/${currentBusiness._id}`, {
+        headers,
         credentials: 'include'
       });
       const data = await response.json();
@@ -102,16 +110,20 @@ const HotelListingManager = () => {
       
       const method = editingRoom ? 'PUT' : 'POST';
       
+      const businessToken = localStorage.getItem('businessToken');
+      const headers = {
+        'Content-Type': 'application/json',
+      };
+      
+      if (businessToken) {
+        headers.Authorization = `Bearer ${businessToken}`;
+      }
+
       const response = await fetch(url, {
         method,
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers,
         credentials: 'include',
-        body: JSON.stringify({
-          ...roomData,
-          businessId: currentBusiness._id
-        })
+        body: JSON.stringify(roomData)
       });
 
       const data = await response.json();

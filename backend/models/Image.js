@@ -38,6 +38,7 @@ const imageSchema = new mongoose.Schema({
       'additional', 
       'menu-card', 
       'menu-item',
+      'menu',           // For menu images
       'room',           // For hotel rooms
       'table',          // For restaurant/cafe tables
       'vehicle',        // For cab vehicles

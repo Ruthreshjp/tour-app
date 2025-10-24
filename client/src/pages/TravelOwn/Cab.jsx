@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import BusinessList from '../components/BusinessList';
+import CabDetails from './CabDetails';
 import { FaTaxi, FaCar, FaUsers, FaSnowflake, FaRupeeSign } from 'react-icons/fa';
 
 const Cab = () => {
@@ -149,6 +150,9 @@ const Cab = () => {
         renderAdditionalInfo={renderCabInfo}
         searchPlaceholder="Search cabs by name, area..."
         extraFilter={enhancedFilter}
+        DetailsModal={CabDetails}
+        hideMaps={true}
+        hideDirections={true}
       />
     </div>
   );

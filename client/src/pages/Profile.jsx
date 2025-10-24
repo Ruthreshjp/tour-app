@@ -95,7 +95,7 @@ const Profile = () => {
               <div className="w-full flex flex-col items-center relative">
                 <img
                   src={
-                    currentUser.avatar
+                    currentUser.avatar && !currentUser.avatar.startsWith('https://firebasestorage.googleapis.com')
                       ? `http://localhost:8000/images/${currentUser.avatar}`
                       : "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTueIx2Jkawe7r91I50VfVAZLS60yx8RjiSfQ&s"
                   }

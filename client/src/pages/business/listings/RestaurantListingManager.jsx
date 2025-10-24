@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
-import { FaPlus, FaEdit, FaTrash, FaTable, FaUtensils, FaEye, FaTh } from 'react-icons/fa';
+import { FaPlus, FaEdit, FaTrash, FaTable, FaUtensils, FaEye, FaTh, FaUsers } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import MongoImageUploadManager from '../../components/MongoImageUploadManager';
 import { Image } from '../../../components/Image';
@@ -75,7 +75,7 @@ const RestaurantListingManager = () => {
 
   const fetchMenuItems = async () => {
     try {
-      const response = await fetch(`/api/business/menu/${currentBusiness._id}`, {
+      const response = await fetch(`/api/business/menu-items/${currentBusiness._id}`, {
         credentials: 'include'
       });
       const data = await response.json();
@@ -164,8 +164,8 @@ const RestaurantListingManager = () => {
     try {
       setLoading(true);
       const url = editingMenuItem 
-        ? `/api/business/menu/${editingMenuItem._id}`
-        : `/api/business/menu`;
+        ? `/api/business/menu-items/${editingMenuItem._id}`
+        : `/api/business/menu-items`;
       
       const method = editingMenuItem ? 'PUT' : 'POST';
       
@@ -240,7 +240,7 @@ const RestaurantListingManager = () => {
     
     try {
       setLoading(true);
-      const response = await fetch(`/api/business/menu/${itemId}`, {
+      const response = await fetch(`/api/business/menu-items/${itemId}`, {
         method: 'DELETE',
         credentials: 'include'
       });
@@ -519,7 +519,7 @@ const RestaurantListingManager = () => {
                   <input
                     type="number"
                     value={tableData.capacity}
-                    onChange={(e) => handleTableInputChange('capacity', parseInt(e.target.value))}
+                    onChange={(e) => handleTableInputChange('capacity', e.target.value ? parseInt(e.target.value) : 0)}
                     className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
                     min="1"
                     max="20"
@@ -566,7 +566,7 @@ const RestaurantListingManager = () => {
                     <input
                       type="number"
                       value={tableData.pricing.perPerson}
-                      onChange={(e) => handleTableInputChange('pricing.perPerson', parseFloat(e.target.value))}
+                      onChange={(e) => handleTableInputChange('pricing.perPerson', e.target.value ? parseFloat(e.target.value) : 0)}
                       className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-orange-500"
                     />
                   </div>
@@ -575,7 +575,7 @@ const RestaurantListingManager = () => {
                     <input
                       type="number"
                       value={tableData.pricing.tableCharge}
-                      onChange={(e) => handleTableInputChange('pricing.tableCharge', parseFloat(e.target.value))}
+                      onChange={(e) => handleTableInputChange('pricing.tableCharge', e.target.value ? parseFloat(e.target.value) : 0)}
                       className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-orange-500"
                     />
                   </div>
@@ -700,7 +700,7 @@ const RestaurantListingManager = () => {
                   <input
                     type="number"
                     value={menuItemData.price}
-                    onChange={(e) => handleMenuInputChange('price', parseFloat(e.target.value))}
+                    onChange={(e) => handleMenuInputChange('price', e.target.value ? parseFloat(e.target.value) : 0)}
                     className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
                     min="0"
                     step="0.01"

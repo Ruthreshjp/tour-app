@@ -3,9 +3,10 @@ import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { FaMapMarkerAlt, FaCamera, FaClock, FaPhone, FaGlobe, FaCheck } from 'react-icons/fa';
-import LeafletLocationPicker from '../components/LeafletLocationPicker';
 import MongoImageUploadManager from '../components/MongoImageUploadManager';
 import MongoMenuManager from '../components/MongoMenuManager';
+import BusinessLocationPicker from './BusinessLocationPicker';
+import { updateBusiness } from '../../redux/business/businessSlice';
 
 const BusinessSetupWizard = () => {
   const { currentBusiness } = useSelector((state) => state.business || {});
@@ -25,11 +26,15 @@ const BusinessSetupWizard = () => {
   }
 
   const [currentStep, setCurrentStep] = useState(1);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [showLocationPicker, setShowLocationPicker] = useState(false);
   const [setupData, setSetupData] = useState({
-    // Basic Info
+    // Basic Info - Initialize with empty strings to prevent controlled/uncontrolled warnings
     businessDescription: '',
     contactPhone: '',
     website: '',
+    googleMapsLink: '', // Add Google Maps link field
+    upiId: '', // Add UPI ID field
     
     // Location
     location: {
@@ -45,15 +50,15 @@ const BusinessSetupWizard = () => {
     mainImage: null,
     additionalImages: [],
     
-    // Operating Hours
+    // Operating Hours (Default: 24/7 for hotels, 9-6 for others)
     operatingHours: {
-      monday: { open: '09:00', close: '18:00', closed: false },
-      tuesday: { open: '09:00', close: '18:00', closed: false },
-      wednesday: { open: '09:00', close: '18:00', closed: false },
-      thursday: { open: '09:00', close: '18:00', closed: false },
-      friday: { open: '09:00', close: '18:00', closed: false },
-      saturday: { open: '09:00', close: '18:00', closed: false },
-      sunday: { open: '09:00', close: '18:00', closed: true }
+      monday: { open: '00:00', close: '23:59', closed: false },
+      tuesday: { open: '00:00', close: '23:59', closed: false },
+      wednesday: { open: '00:00', close: '23:59', closed: false },
+      thursday: { open: '00:00', close: '23:59', closed: false },
+      friday: { open: '00:00', close: '23:59', closed: false },
+      saturday: { open: '00:00', close: '23:59', closed: false },
+      sunday: { open: '00:00', close: '23:59', closed: false }
     },
     
     // Business Specific Data
@@ -73,8 +78,6 @@ const BusinessSetupWizard = () => {
       title: 'Hotel Setup',
       fields: [
         { key: 'totalRooms', label: 'Total Rooms', type: 'number', required: true },
-        { key: 'checkInTime', label: 'Check-in Time', type: 'time', required: true },
-        { key: 'checkOutTime', label: 'Check-out Time', type: 'time', required: true },
         { key: 'amenities', label: 'Amenities (comma separated)', type: 'textarea', required: false },
         { key: 'starRating', label: 'Star Rating', type: 'select', options: [1,2,3,4,5], required: true }
       ]
@@ -123,6 +126,50 @@ const BusinessSetupWizard = () => {
 
   const currentBusinessType = businessTypes[currentBusiness?.businessType] || businessTypes.hotel;
 
+  // Load existing business data if already set up
+  useEffect(() => {
+    if (currentBusiness) {
+      // Check if setup is completed
+      if (currentBusiness.setupCompleted) {
+        setIsEditMode(true);
+        setCurrentStep(7); // Go to summary/edit step
+      } else {
+        setIsEditMode(false);
+        setCurrentStep(1);
+      }
+      
+      // Load existing data regardless of setup status - use || '' to prevent undefined values
+      setSetupData({
+        businessDescription: currentBusiness.description || '',
+        contactPhone: currentBusiness.phone || '',
+        website: currentBusiness.website || '',
+        googleMapsLink: currentBusiness.googleMapsLink || '',
+        upiId: currentBusiness.upiId || '',
+        location: {
+          latitude: currentBusiness.location?.coordinates?.[1] || null,
+          longitude: currentBusiness.location?.coordinates?.[0] || null,
+          address: currentBusiness.address || '',
+          city: currentBusiness.city || '',
+          state: currentBusiness.state || '',
+          pincode: currentBusiness.pincode || ''
+        },
+        mainImage: currentBusiness.profileImage || currentBusiness.mainImage || null,
+        additionalImages: currentBusiness.businessImages || currentBusiness.additionalImages || [],
+        operatingHours: currentBusiness.businessHours || currentBusiness.operatingHours || {
+          monday: { open: '00:00', close: '23:59', closed: false },
+          tuesday: { open: '00:00', close: '23:59', closed: false },
+          wednesday: { open: '00:00', close: '23:59', closed: false },
+          thursday: { open: '00:00', close: '23:59', closed: false },
+          friday: { open: '00:00', close: '23:59', closed: false },
+          saturday: { open: '00:00', close: '23:59', closed: false },
+          sunday: { open: '00:00', close: '23:59', closed: false }
+        },
+        businessSpecific: currentBusiness.businessSpecific || {},
+        menu: currentBusiness.menu || { menuCardImages: [], items: [] }
+      });
+    }
+  }, [currentBusiness]);
+
   const handleInputChange = (field, value) => {
     if (field.includes('.')) {
       const [parent, child] = field.split('.');
@@ -151,20 +198,6 @@ const BusinessSetupWizard = () => {
     }));
   };
 
-  const handleLocationSelect = (locationData) => {
-    setSetupData(prev => ({
-      ...prev,
-      location: {
-        latitude: locationData.lat,
-        longitude: locationData.lng,
-        address: locationData.address || '',
-        city: locationData.city || '',
-        state: locationData.state || '',
-        pincode: locationData.pincode || ''
-      }
-    }));
-  };
-
   const handleImageUpload = (type, images) => {
     if (type === 'main') {
       setSetupData(prev => ({ ...prev, mainImage: images[0] }));
@@ -186,12 +219,35 @@ const BusinessSetupWizard = () => {
     }));
   };
 
+  const handleLocationConfirm = (locationData) => {
+    console.log('Location confirmed:', locationData);
+    setSetupData(prev => ({
+      ...prev,
+      location: {
+        ...prev.location,
+        address: locationData.address,
+        city: locationData.city || prev.location.city,
+        state: locationData.state || prev.location.state,
+        pincode: locationData.pincode || prev.location.pincode,
+        latitude: locationData.lat,
+        longitude: locationData.lng
+      },
+      googleMapsLink: locationData.googleMapsLink
+    }));
+    setShowLocationPicker(false);
+    toast.success('Location details updated successfully!');
+  };
+
   const validateStep = (step) => {
     switch (step) {
       case 1:
         return setupData.businessDescription.trim() && setupData.contactPhone.trim();
       case 2:
-        return setupData.location.latitude && setupData.location.longitude;
+        return setupData.location.address.trim() && 
+               setupData.location.city.trim() && 
+               setupData.location.state.trim() && 
+               setupData.location.pincode.trim() &&
+               setupData.googleMapsLink.trim();
       case 3:
         return setupData.mainImage;
       case 4:
@@ -238,6 +294,8 @@ const BusinessSetupWizard = () => {
 
     setLoading(true);
     try {
+      console.log('📤 Submitting setup data:', setupData);
+      
       const response = await fetch('/api/business/setup', {
         method: 'POST',
         headers: {
@@ -251,14 +309,36 @@ const BusinessSetupWizard = () => {
       });
 
       const data = await response.json();
+      console.log('📥 Setup response:', data);
+      
       if (data.success) {
-        toast.success('Business setup completed successfully!');
-        navigate('/business/dashboard');
+        toast.success(isEditMode ? 'Business updated successfully!' : 'Business setup completed successfully!');
+        
+        // Update Redux state with new business data
+        if (data.business) {
+          console.log('🔄 Updating Redux and localStorage with new business data');
+          
+          // Update Redux
+          dispatch(updateBusiness(data.business));
+          
+          // Update localStorage
+          localStorage.setItem('businessData', JSON.stringify(data.business));
+          
+          // Dispatch event to update other components
+          window.dispatchEvent(new Event('storage'));
+          
+          console.log('✅ Redux and localStorage updated');
+        }
+        
+        // Navigate to dashboard
+        setTimeout(() => {
+          navigate('/business/dashboard');
+        }, 500);
       } else {
         toast.error(data.message || 'Setup failed');
       }
     } catch (error) {
-      console.error('Setup error:', error);
+      console.error('❌ Setup error:', error);
       toast.error('Setup failed. Please try again.');
     } finally {
       setLoading(false);
@@ -309,6 +389,21 @@ const BusinessSetupWizard = () => {
                 placeholder="https://yourbusiness.com"
               />
             </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                UPI ID for Payments (Optional)
+              </label>
+              <input
+                type="text"
+                value={setupData.upiId}
+                onChange={(e) => handleInputChange('upiId', e.target.value)}
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
+                placeholder="yourname@paytm / yourname@phonepe"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Customers will use this UPI ID to make payments for bookings
+              </p>
+            </div>
           </div>
         );
 
@@ -316,16 +411,92 @@ const BusinessSetupWizard = () => {
         return (
           <div className="space-y-6">
             <h3 className="text-xl font-semibold text-gray-800">Location Setup</h3>
-            <p className="text-gray-600">Select your business location on the map</p>
-            <LeafletLocationPicker
-              onLocationSelect={handleLocationSelect}
-              initialLocation={setupData.location.latitude && setupData.location.longitude ? {
-                lat: setupData.location.latitude,
-                lng: setupData.location.longitude,
-                address: setupData.location.address
-              } : null}
-              height="400px"
-            />
+            <p className="text-gray-600">Provide your business location details</p>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Business Address *
+                </label>
+                <textarea
+                  value={setupData.location.address || ''}
+                  onChange={(e) => handleInputChange('location.address', e.target.value)}
+                  placeholder="Enter complete business address"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  rows="3"
+                  required
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Google Maps Link *
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="url"
+                    value={setupData.googleMapsLink || ''}
+                    onChange={(e) => handleInputChange('googleMapsLink', e.target.value)}
+                    placeholder="https://maps.google.com/..."
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowLocationPicker(true)}
+                    className="px-4 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 flex items-center gap-2 whitespace-nowrap"
+                  >
+                    <FaMapMarkerAlt />
+                    Pin on Map
+                  </button>
+                </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  Click "Pin on Map" to select your location interactively, or paste a Google Maps link
+                </p>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  City *
+                </label>
+                <input
+                  type="text"
+                  value={setupData.location.city || ''}
+                  onChange={(e) => handleInputChange('location.city', e.target.value)}
+                  placeholder="Enter city"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  required
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  State *
+                </label>
+                <input
+                  type="text"
+                  value={setupData.location.state || ''}
+                  onChange={(e) => handleInputChange('location.state', e.target.value)}
+                  placeholder="Enter state"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  required
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Pincode *
+                </label>
+                <input
+                  type="text"
+                  value={setupData.location.pincode || ''}
+                  onChange={(e) => handleInputChange('location.pincode', e.target.value)}
+                  placeholder="Enter pincode"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  required
+                />
+              </div>
+            </div>
           </div>
         );
 
@@ -486,24 +657,188 @@ const BusinessSetupWizard = () => {
 
       case 7:
         return (
-          <div className="space-y-6 text-center">
-            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
-              <FaCheck className="w-8 h-8 text-green-600" />
+          <div className="space-y-6">
+            {/* Header */}
+            <div className="text-center">
+              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <FaCheck className="w-8 h-8 text-green-600" />
+              </div>
+              <h3 className="text-2xl font-bold text-gray-800">
+                {isEditMode ? 'Business Setup - Edit Mode' : 'Setup Complete!'}
+              </h3>
+              <p className="text-gray-600 mt-2">
+                {isEditMode 
+                  ? 'Review and update your business information' 
+                  : 'Review your information and complete the setup'}
+              </p>
             </div>
-            <h3 className="text-xl font-semibold text-gray-800">Setup Complete!</h3>
-            <p className="text-gray-600">
-              Review your information and complete the setup to start managing your business.
-            </p>
-            <div className="bg-gray-50 p-4 rounded-lg text-left">
-              <h4 className="font-medium mb-2">Setup Summary:</h4>
-              <ul className="space-y-1 text-sm text-gray-600">
-                <li>✓ Basic information completed</li>
-                <li>✓ Location set</li>
-                <li>✓ Images uploaded</li>
-                <li>✓ Operating hours configured</li>
-                <li>✓ Business-specific details added</li>
-              </ul>
+
+            {/* Summary Cards */}
+            <div className="grid gap-4">
+              {/* Basic Information */}
+              <div className="bg-white border-2 border-gray-200 rounded-lg p-4 hover:border-orange-300 transition-colors">
+                <div className="flex justify-between items-center mb-3">
+                  <h4 className="font-semibold text-gray-800 flex items-center">
+                    <FaPhone className="mr-2 text-orange-500" />
+                    Basic Information
+                  </h4>
+                  {isEditMode && (
+                    <button
+                      onClick={() => setCurrentStep(1)}
+                      className="text-sm px-3 py-1 bg-orange-500 text-white rounded hover:bg-orange-600"
+                    >
+                      Edit
+                    </button>
+                  )}
+                </div>
+                <div className="space-y-2 text-sm text-gray-600">
+                  <p><strong>Business:</strong> {currentBusiness?.businessName}</p>
+                  <p><strong>Type:</strong> {currentBusiness?.businessType?.toUpperCase()}</p>
+                  <p><strong>Description:</strong> {setupData.businessDescription || 'Not provided'}</p>
+                  <p><strong>Phone:</strong> {setupData.contactPhone || 'Not provided'}</p>
+                  <p><strong>Website:</strong> {setupData.website || 'Not provided'}</p>
+                  <p><strong>UPI ID:</strong> {setupData.upiId || 'Not configured'}</p>
+                </div>
+              </div>
+
+              {/* Location */}
+              <div className="bg-white border-2 border-gray-200 rounded-lg p-4 hover:border-orange-300 transition-colors">
+                <div className="flex justify-between items-center mb-3">
+                  <h4 className="font-semibold text-gray-800 flex items-center">
+                    <FaMapMarkerAlt className="mr-2 text-orange-500" />
+                    Location
+                  </h4>
+                  {isEditMode && (
+                    <button
+                      onClick={() => setCurrentStep(2)}
+                      className="text-sm px-3 py-1 bg-orange-500 text-white rounded hover:bg-orange-600"
+                    >
+                      Edit
+                    </button>
+                  )}
+                </div>
+                <div className="space-y-2 text-sm text-gray-600">
+                  <p><strong>Address:</strong> {setupData.location.address || 'Not provided'}</p>
+                  <p><strong>City:</strong> {setupData.location.city || 'Not provided'}</p>
+                  <p><strong>State:</strong> {setupData.location.state || 'Not provided'}</p>
+                  <p><strong>Pincode:</strong> {setupData.location.pincode || 'Not provided'}</p>
+                  <p><strong>Google Maps:</strong> {setupData.googleMapsLink ? 'Configured' : 'Not provided'}</p>
+                </div>
+              </div>
+
+              {/* Images */}
+              <div className="bg-white border-2 border-gray-200 rounded-lg p-4 hover:border-orange-300 transition-colors">
+                <div className="flex justify-between items-center mb-3">
+                  <h4 className="font-semibold text-gray-800 flex items-center">
+                    <FaCamera className="mr-2 text-orange-500" />
+                    Images
+                  </h4>
+                  {isEditMode && (
+                    <button
+                      onClick={() => setCurrentStep(3)}
+                      className="text-sm px-3 py-1 bg-orange-500 text-white rounded hover:bg-orange-600"
+                    >
+                      Edit
+                    </button>
+                  )}
+                </div>
+                <div className="space-y-2 text-sm text-gray-600">
+                  <p><strong>Main Image:</strong> {setupData.mainImage ? '✓ Uploaded' : '✗ Not uploaded'}</p>
+                  <p><strong>Additional Images:</strong> {setupData.additionalImages?.length || 0} images</p>
+                </div>
+              </div>
+
+              {/* Operating Hours */}
+              <div className="bg-white border-2 border-gray-200 rounded-lg p-4 hover:border-orange-300 transition-colors">
+                <div className="flex justify-between items-center mb-3">
+                  <h4 className="font-semibold text-gray-800 flex items-center">
+                    <FaClock className="mr-2 text-orange-500" />
+                    Operating Hours
+                  </h4>
+                  {isEditMode && (
+                    <button
+                      onClick={() => setCurrentStep(4)}
+                      className="text-sm px-3 py-1 bg-orange-500 text-white rounded hover:bg-orange-600"
+                    >
+                      Edit
+                    </button>
+                  )}
+                </div>
+                <div className="space-y-1 text-sm text-gray-600">
+                  {Object.entries(setupData.operatingHours).map(([day, hours]) => (
+                    <p key={day}>
+                      <strong className="capitalize">{day}:</strong>{' '}
+                      {hours.closed ? 'Closed' : `${hours.open} - ${hours.close}`}
+                    </p>
+                  ))}
+                </div>
+              </div>
+
+              {/* Business Specific Details */}
+              <div className="bg-white border-2 border-gray-200 rounded-lg p-4 hover:border-orange-300 transition-colors">
+                <div className="flex justify-between items-center mb-3">
+                  <h4 className="font-semibold text-gray-800">
+                    {currentBusinessType.title}
+                  </h4>
+                  {isEditMode && (
+                    <button
+                      onClick={() => setCurrentStep(5)}
+                      className="text-sm px-3 py-1 bg-orange-500 text-white rounded hover:bg-orange-600"
+                    >
+                      Edit
+                    </button>
+                  )}
+                </div>
+                <div className="space-y-2 text-sm text-gray-600">
+                  {currentBusinessType.fields.map(field => (
+                    <p key={field.key}>
+                      <strong>{field.label}:</strong>{' '}
+                      {setupData.businessSpecific[field.key] || 'Not provided'}
+                    </p>
+                  ))}
+                </div>
+              </div>
+
+              {/* Menu (for restaurants and cafes) */}
+              {(currentBusiness?.businessType === 'restaurant' || currentBusiness?.businessType === 'cafe') && (
+                <div className="bg-white border-2 border-gray-200 rounded-lg p-4 hover:border-orange-300 transition-colors">
+                  <div className="flex justify-between items-center mb-3">
+                    <h4 className="font-semibold text-gray-800">Menu</h4>
+                    {isEditMode && (
+                      <button
+                        onClick={() => setCurrentStep(6)}
+                        className="text-sm px-3 py-1 bg-orange-500 text-white rounded hover:bg-orange-600"
+                      >
+                        Edit
+                      </button>
+                    )}
+                  </div>
+                  <div className="space-y-2 text-sm text-gray-600">
+                    <p><strong>Menu Card Images:</strong> {setupData.menu?.menuCardImages?.length || 0} images</p>
+                    <p><strong>Menu Items:</strong> {setupData.menu?.items?.length || 0} items</p>
+                  </div>
+                </div>
+              )}
             </div>
+
+            {/* Action Buttons */}
+            {isEditMode && (
+              <div className="flex gap-3 pt-4">
+                <button
+                  onClick={() => navigate('/business/dashboard')}
+                  className="flex-1 px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+                >
+                  Back to Dashboard
+                </button>
+                <button
+                  onClick={handleSubmit}
+                  disabled={loading}
+                  className="flex-1 px-6 py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 disabled:opacity-50 transition-colors"
+                >
+                  {loading ? 'Updating...' : 'Update Business'}
+                </button>
+              </div>
+            )}
           </div>
         );
 
@@ -527,11 +862,13 @@ const BusinessSetupWizard = () => {
               return steps.map((step) => (
                 <div
                   key={step}
+                  onClick={() => isEditMode && setCurrentStep(step)}
                   className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium ${
                     step <= currentStep
                       ? 'bg-orange-500 text-white'
                       : 'bg-gray-200 text-gray-600'
-                  }`}
+                  } ${isEditMode ? 'cursor-pointer hover:bg-orange-600 hover:scale-110 transition-all' : ''}`}
+                  title={isEditMode ? `Go to step ${step}` : ''}
                 >
                   {step}
                 </div>
@@ -553,40 +890,54 @@ const BusinessSetupWizard = () => {
           {renderStepContent()}
 
           {/* Navigation Buttons */}
-          <div className="flex justify-between mt-8">
-            <button
-              onClick={prevStep}
-              disabled={currentStep === 1}
-              className="px-6 py-2 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Previous
-            </button>
-            
-            {(() => {
-              const businessType = currentBusiness?.businessType;
-              const isRestaurantOrCafe = businessType === 'restaurant' || businessType === 'cafe';
-              const finalStep = isRestaurantOrCafe ? 7 : 6;
+          {/* Hide navigation buttons in edit mode when on summary step (step 7) */}
+          {!(isEditMode && currentStep === 7) && (
+            <div className="flex justify-between mt-8">
+              <button
+                onClick={prevStep}
+                disabled={currentStep === 1}
+                className="px-6 py-2 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Previous
+              </button>
               
-              return currentStep < finalStep ? (
-                <button
-                  onClick={nextStep}
-                  className="px-6 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600"
-                >
-                  Next
-                </button>
-              ) : (
-                <button
-                  onClick={handleSubmit}
-                  disabled={loading}
-                  className="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:opacity-50"
-                >
-                  {loading ? 'Setting up...' : 'Complete Setup'}
-                </button>
-              );
-            })()}
-          </div>
+              {(() => {
+                const businessType = currentBusiness?.businessType;
+                const isRestaurantOrCafe = businessType === 'restaurant' || businessType === 'cafe';
+                const finalStep = isRestaurantOrCafe ? 7 : 6;
+                
+                return currentStep < finalStep ? (
+                  <button
+                    onClick={nextStep}
+                    className="px-6 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600"
+                  >
+                    Next
+                  </button>
+                ) : (
+                  // Only show Complete Setup button for first-time setup (not in edit mode)
+                  !isEditMode && (
+                    <button
+                      onClick={handleSubmit}
+                      disabled={loading}
+                      className="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:opacity-50"
+                    >
+                      {loading ? 'Setting up...' : 'Complete Setup'}
+                    </button>
+                  )
+                );
+              })()}
+            </div>
+          )}
         </div>
       </div>
+
+      {/* Business Location Picker Modal */}
+      <BusinessLocationPicker
+        isOpen={showLocationPicker}
+        onClose={() => setShowLocationPicker(false)}
+        onConfirm={handleLocationConfirm}
+        initialLocation={setupData.location}
+      />
     </div>
   );
 };

@@ -11,6 +11,7 @@ import {
 import { toast } from "react-toastify";
 import axios from "axios";
 import { FiUpload } from "react-icons/fi";
+
 const AdminUpdateProfile = () => {
   const { currentUser, loading, error } = useSelector((state) => state.user);
   const dispatch = useDispatch();
@@ -20,6 +21,7 @@ const AdminUpdateProfile = () => {
     username: "",
     address: "",
     phone: "",
+    upiId: "",
   });
 
   const [avatarFile, setAvatarFile] = useState(null);
@@ -46,6 +48,7 @@ const AdminUpdateProfile = () => {
         username: currentUser.username,
         address: currentUser.address,
         phone: currentUser.phone,
+        upiId: currentUser.upiId || "",
         avatar: currentUser.avatar,
       });
     }
@@ -72,7 +75,8 @@ const AdminUpdateProfile = () => {
       !avatarFile &&
       currentUser.username === formData.username &&
       currentUser.address === formData.address &&
-      currentUser.phone === formData.phone
+      currentUser.phone === formData.phone &&
+      (currentUser.upiId || "") === formData.upiId
     ) {
       toast.error("Change at least 1 field to update details");
       return;
@@ -83,11 +87,15 @@ const AdminUpdateProfile = () => {
 
       const updatedForm = new FormData();
       updatedForm.append("username", formData.username);
+      updatedForm.append("email", currentUser.email); // Include email
       updatedForm.append("address", formData.address);
       updatedForm.append("phone", formData.phone);
+      updatedForm.append("upiId", formData.upiId || ""); // Ensure empty string if null
       if (avatarFile) {
         updatedForm.append("avatar", avatarFile);
       }
+
+      console.log('Updating profile with UPI ID:', formData.upiId); // Debug log
 
       const res = await axios.post(
         `/api/user/update/${currentUser._id}`,
@@ -217,13 +225,25 @@ const AdminUpdateProfile = () => {
               <div>
                 <label className="font-medium">Phone</label>
                 <input
-                  type="text"
+                  type="tel"
                   name="phone"
                   value={formData.phone}
                   onChange={handleChange}
                   className="w-full mt-2 p-3 border rounded-md bg-gray-200 outline-none"
-                  placeholder="Your Phone"
+                  placeholder="+91 9876543210"
                 />
+              </div>
+              <div>
+                <label className="font-medium">UPI ID</label>
+                <input
+                  type="text"
+                  name="upiId"
+                  value={formData.upiId}
+                  onChange={handleChange}
+                  className="w-full mt-2 p-3 border rounded-md bg-gray-200 outline-none"
+                  placeholder="yourname@upi (e.g., admin@paytm, 9876543210@ybl)"
+                />
+                <p className="text-xs text-gray-500 mt-1">💡 This UPI ID will be used for package booking payments</p>
               </div>
               <button
                 disabled={loading}

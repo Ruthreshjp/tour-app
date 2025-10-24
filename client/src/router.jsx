@@ -14,19 +14,21 @@ import About from "./pages/About";
 import PrivateRoute from "./pages/Routes/PrivateRoute";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import UpdatePackage from "./pages/admin/UpdatePackage";
-import Package from "./pages/Package";
 import Search from "./pages/Search";
 import Blog from "./pages/Blog";
 import Contact from "./pages/Contact";
 import RatingsPage from "./pages/RatingsPage";
-import Booking from "./pages/user/Booking";
 import TravelOwn from "./pages/TravelOwn/TravelOwn";
 import Hotels from "./pages/TravelOwn/Hotels";
 import Restaurants from "./pages/TravelOwn/Restaurants";
+import Cafe from "./pages/TravelOwn/Cafe";
 import Shopping from "./pages/TravelOwn/Shopping";
 import Cab from "./pages/TravelOwn/Cab";
 import CabBooking from "./pages/TravelOwn/CabBooking";
-import Cafe from "./pages/TravelOwn/Cafe";
+import Package from "./pages/Package";
+import Booking from "./pages/user/Booking";
+import BookingInfo from "./pages/components/Booking";
+import PaymentPage from "./pages/PaymentPage";
 import RootLayout from "./pages/components/RootLayout";
 import BusinessLayout from "./pages/components/BusinessLayout";
 import BusinessLogin from "./pages/business/BusinessLogin";
@@ -35,6 +37,10 @@ import BusinessDashboard from "./pages/business/BusinessDashboard";
 import BusinessListings from "./pages/business/BusinessListings";
 import BusinessBookings from "./pages/business/BusinessBookings";
 import BusinessSetupWizard from "./pages/business/BusinessSetupWizard";
+import BusinessNotifications from "./pages/business/BusinessNotifications";
+import AnalyticsViews from "./pages/business/AnalyticsViews";
+import AnalyticsBookings from "./pages/business/AnalyticsBookings";
+import AnalyticsRatings from "./pages/business/AnalyticsRatings";
 import BusinessPrivateRoute from "./pages/Routes/BusinessPrivateRoute";
 
 export const router = createBrowserRouter(
@@ -43,9 +49,12 @@ export const router = createBrowserRouter(
       <Route index element={<Home />} />
       <Route path="login" element={<Login />} />
       <Route path="signup" element={<Signup />} />
-      <Route path="search" element={<Search />} />
-      <Route path="blog" element={<Blog />} />
       <Route path="contact" element={<Contact />} />
+      <Route path="blog" element={<Blog />} />
+      <Route path="ratings" element={<RatingsPage />} />
+      <Route path="payment/:bookingId" element={<PaymentPage />} />
+      <Route path="booking" element={<BookingInfo />} />
+      <Route path="search" element={<Search />} />
       <Route path="about" element={<About />} />
       
       {/* Business routes - separate layout without navbar */}
@@ -57,6 +66,10 @@ export const router = createBrowserRouter(
           <Route path="listings" element={<BusinessListings />} />
           <Route path="bookings" element={<BusinessBookings />} />
           <Route path="setup" element={<BusinessSetupWizard />} />
+          <Route path="notifications" element={<BusinessNotifications />} />
+          <Route path="analytics/views" element={<AnalyticsViews />} />
+          <Route path="analytics/bookings" element={<AnalyticsBookings />} />
+          <Route path="analytics/ratings" element={<AnalyticsRatings />} />
         </Route>
       </Route>
       

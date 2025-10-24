@@ -7,7 +7,7 @@ import packageRoute from "./routes/package.route.js";
 import ratingRoute from "./routes/rating.route.js";
 import bookingRoute from "./routes/booking.route.js";
 import paymentRoutes from "./routes/payment.routes.js";
-import businessRoute from "./routes/business.route.js";
+import businessRoute from "./routes/businessRoutes.js";
 import businessTypeRoute from "./routes/businessType.route.js";
 import locationRoute from "./routes/location.route.js";
 import businessBookingRoute from "./routes/businessBooking.route.js";

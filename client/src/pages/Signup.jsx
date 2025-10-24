@@ -172,12 +172,12 @@ const Signup = () => {
               <div className="mt-4">
                 <label>Phone</label>
                 <input
-                  type="number"
+                  type="tel"
                   name="phone"
                   value={formData.phone}
                   onChange={handleChange}
                   className="w-full mt-2 p-3 border rounded-md bg-gray-200 outline-none"
-                  placeholder="Your Phone"
+                  placeholder="+91 9876543210"
                 />
               </div>
               <button className="w-full bg-[#EB662B] text-white p-3 mt-4 rounded-md">

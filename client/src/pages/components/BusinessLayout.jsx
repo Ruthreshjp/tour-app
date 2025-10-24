@@ -1,7 +1,5 @@
 import React, { Suspense } from 'react';
 import { Outlet, useNavigation } from 'react-router-dom';
-import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
 
 const LoadingSpinner = () => (
   <div className="flex items-center justify-center min-h-[60vh]">
@@ -25,19 +23,8 @@ const BusinessLayout = () => {
           )}
         </Suspense>
       </div>
-      <ToastContainer
-        position="top-right"
-        autoClose={5000}
-        hideProgressBar={false}
-        newestOnTop
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        theme="light"
-      />
       {/* No Footer for business routes */}
+      {/* ToastContainer is provided by parent RootLayout */}
     </>
   );
 };

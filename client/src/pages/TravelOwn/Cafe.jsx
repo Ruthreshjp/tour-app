@@ -1,10 +1,17 @@
 import React, { useState } from 'react';
 import { FaCoffee, FaClock, FaWifi, FaTable, FaPlug } from 'react-icons/fa';
 import BusinessList from '../components/BusinessList';
+import CafeDetailsModal from '../components/CafeDetailsModal';
+import CafeBooking from '../components/CafeBooking';
+import { toast } from 'react-toastify';
 
 const Cafe = () => {
   const [tableType, setTableType] = useState('');
   const [hasWifi, setHasWifi] = useState('');
+
+  const handleBookingSuccess = (booking) => {
+    toast.success('Table booked successfully!');
+  };
 
   // Function to render cafe-specific information
   const renderCafeInfo = (cafe) => (
@@ -84,42 +91,42 @@ const Cafe = () => {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Cafe-specific filters */}
-      <div className="bg-white p-4 rounded-lg shadow-md">
-        <h3 className="text-lg font-semibold mb-3">Cafe Filters</h3>
-        <div className="flex gap-2 flex-wrap">
-          <select
-            className="px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
-            value={tableType}
-            onChange={(e) => setTableType(e.target.value)}
-          >
-            <option value="">Table Type</option>
-            <option value="work-friendly">Work-Friendly</option>
-            <option value="cozy">Cozy</option>
-            <option value="couple">Couple</option>
-            <option value="regular">Regular</option>
-          </select>
-          
-          <select
-            className="px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
-            value={hasWifi}
-            onChange={(e) => setHasWifi(e.target.value)}
-          >
-            <option value="">WiFi Preference</option>
-            <option value="true">WiFi Available</option>
-            <option value="false">No WiFi Needed</option>
-          </select>
-        </div>
+    <div className="container mx-auto px-4 py-8">
+      <div className="flex justify-end mb-4 gap-4 flex-wrap">
+        <select
+          className="px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+          value={tableType}
+          onChange={(e) => setTableType(e.target.value)}
+        >
+          <option value="">Table Type</option>
+          <option value="work-friendly">Work-Friendly</option>
+          <option value="cozy">Cozy</option>
+          <option value="couple">Couple</option>
+          <option value="regular">Regular</option>
+        </select>
+
+        <select
+          className="px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+          value={hasWifi}
+          onChange={(e) => setHasWifi(e.target.value)}
+        >
+          <option value="">WiFi Preference</option>
+          <option value="true">WiFi Available</option>
+          <option value="false">No WiFi Needed</option>
+        </select>
       </div>
-      
+
       <BusinessList
         businessType="cafe"
         title="Nearby Cafes"
         renderAdditionalInfo={renderCafeInfo}
         searchPlaceholder="Search cafes by name, specialty..."
         extraFilter={enhancedFilter}
+        DetailsModal={CafeDetailsModal}
+        BookingModal={CafeBooking}
+        onBookingSuccess={handleBookingSuccess}
       />
+
     </div>
   );
 };

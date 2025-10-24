@@ -305,7 +305,7 @@ const SimpleBookingForm = ({ businessType, businessId, onBookingSuccess }) => {
                 name="customerPhone"
                 value={formData.customerPhone}
                 onChange={handleInputChange}
-                placeholder="Enter your phone number"
+                placeholder="+91 9876543210"
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
                 required
               />

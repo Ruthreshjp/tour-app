@@ -132,10 +132,28 @@ const BusinessMap = ({ businessType = 'all', center, radius = 5000 }) => {
                 <p>{business.description}</p>
                 <p className="mt-2">
                   <button
-                    onClick={() => window.open(
-                      `https://www.google.com/maps/dir/?api=1&destination=${business.location.coordinates[1]},${business.location.coordinates[0]}`,
-                      '_blank'
-                    )}
+                    onClick={() => {
+                      const coords = business.location?.coordinates;
+                      if (coords && coords.length >= 2) {
+                        // MongoDB stores coordinates as [longitude, latitude]
+                        // Google Maps expects latitude,longitude
+                        window.open(
+                          `https://www.google.com/maps/dir/?api=1&destination=${coords[1]},${coords[0]}`,
+                          '_blank'
+                        );
+                      } else {
+                        // Fallback to address search if coordinates not available
+                        const address = `${business.address || ''}, ${business.city || ''}, ${business.state || ''}`.trim();
+                        if (address) {
+                          window.open(
+                            `https://www.google.com/maps/search/${encodeURIComponent(address)}`,
+                            '_blank'
+                          );
+                        } else {
+                          alert('Location information not available for this business');
+                        }
+                      }
+                    }}
                     className="text-blue-500 hover:underline"
                   >
                     Get Directions

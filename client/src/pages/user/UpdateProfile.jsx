@@ -233,12 +233,12 @@ const UpdateProfile = () => {
               <div>
                 <label className="font-medium">Phone</label>
                 <input
-                  type="text"
+                  type="tel"
                   name="phone"
                   value={formData.phone}
                   onChange={handleChange}
                   className="w-full mt-2 p-3 border rounded-md bg-gray-200 outline-none"
-                  placeholder="Your Phone"
+                  placeholder="+91 9876543210"
                 />
               </div>
               <button

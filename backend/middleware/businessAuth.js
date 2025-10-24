@@ -24,9 +24,13 @@ const businessAuth = async (req, res, next) => {
     try {
       // Verify token
       const decoded = jwt.verify(token, process.env.JWT_SECRET || "fallback_secret");
+      console.log("🔐 Business auth - Token decoded, businessId:", decoded.businessId);
       
-      // Check if business exists and is active
-      const business = await Business.findById(decoded.businessId).select("-password");
+      // Check if business exists and is active - use lean() to avoid validation
+      const business = await Business.findById(decoded.businessId)
+        .select("-password")
+        .lean(); // Use lean() to get plain object without validation
+      console.log("🏢 Business auth - Business found:", business ? business.businessName : "Not found");
       
       if (!business) {
         return res.status(401).json({

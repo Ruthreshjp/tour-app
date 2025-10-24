@@ -6,6 +6,7 @@ import { toast } from 'react-toastify';
 import BusinessMap from '../components/BusinessMap';
 import MapDirections from '../components/MapDirections';
 import HotelBooking from '../components/HotelBooking';
+import HotelDetailsModal from '../components/HotelDetailsModal';
 import BusinessRating from '../components/BusinessRating';
 import BusinessViewTracker from '../components/BusinessViewTracker';
 import { Image } from '../../components/Image';
@@ -23,6 +24,7 @@ const Hotels = () => {
   const [minRating, setMinRating] = useState('');
   const [showBooking, setShowBooking] = useState(false);
   const [showRating, setShowRating] = useState(false);
+  const [showDetails, setShowDetails] = useState(false);
   const [bedType, setBedType] = useState('');
   const [onlyAC, setOnlyAC] = useState(false);
   const [pricingMode, setPricingMode] = useState(''); // '', 'day', 'night', 'dayAndNight'
@@ -308,8 +310,15 @@ const Hotels = () => {
           <div key={hotel._id} className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 overflow-hidden border border-gray-100">
             <div className="relative">
               <Image
-                src={hotel.mainImage || (hotel.images && hotel.images[0]) || (hotel.additionalImages && hotel.additionalImages[0])}
-                alt={hotel.businessName || hotel.name}
+                src={
+                  hotel.profileImage || 
+                  hotel.mainImage || 
+                  (hotel.businessImages && hotel.businessImages.length > 0 && hotel.businessImages[0]) ||
+                  (hotel.images && hotel.images.length > 0 && hotel.images[0]) || 
+                  (hotel.additionalImages && hotel.additionalImages.length > 0 && hotel.additionalImages[0]) ||
+                  null
+                }
+                alt={hotel.businessName || hotel.name || 'Hotel'}
                 className="w-full h-56 object-cover"
                 placeholder="https://placehold.co/600x400/e2e8f0/64748b?text=Hotel+Image"
               />
@@ -366,23 +375,33 @@ const Hotels = () => {
                   <div className="text-sm text-gray-600 mb-1">Starting from</div>
                   <div className="text-2xl font-bold text-green-600">
                     ₹{Math.min(...(hotel.rooms || hotel.pricing?.rooms || []).map(r => 
-                      r.pricing?.nightRate || r.pricing?.dayRate || r.pricing?.night || r.pricing?.day || 999
+                      r.pricing?.dayRate || r.pricing?.nightRate || r.pricing?.day || r.pricing?.night || 999
                     ).filter(p => p > 0)) || 999}
-                    <span className="text-sm font-normal text-gray-500">/night</span>
+                    <span className="text-sm font-normal text-gray-500">/day</span>
                   </div>
                 </div>
               )}
 
               {/* Action Buttons */}
-              <div className="flex gap-3">
+              <div className="grid grid-cols-3 gap-2">
+                <button
+                  onClick={() => {
+                    setSelectedHotel(hotel);
+                    setShowDetails(true);
+                  }}
+                  className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-semibold py-3 px-2 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg flex items-center justify-center text-sm"
+                >
+                  <FaBed className="mr-1" />
+                  View Details
+                </button>
                 <button
                   onClick={() => {
                     setSelectedHotel(hotel);
                     setShowBooking(true);
                   }}
-                  className="flex-1 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg flex items-center justify-center"
+                  className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold py-3 px-2 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg flex items-center justify-center text-sm"
                 >
-                  <FaBed className="mr-2" />
+                  <FaBed className="mr-1" />
                   Book Now
                 </button>
                 <button
@@ -399,7 +418,7 @@ const Hotels = () => {
                       );
                     }
                   }}
-                  className="px-4 py-3 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-lg transition-colors duration-200 flex items-center justify-center"
+                  className="bg-blue-500 hover:bg-blue-600 text-white font-medium py-3 px-2 rounded-lg transition-colors duration-200 flex items-center justify-center text-sm"
                 >
                   <FaDirections className="mr-1" />
                   Directions
@@ -473,6 +492,19 @@ const Hotels = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Hotel Details Modal */}
+      {showDetails && selectedHotel && (
+        <HotelDetailsModal
+          hotel={selectedHotel}
+          isOpen={showDetails}
+          onClose={() => {
+            setShowDetails(false);
+            setSelectedHotel(null);
+          }}
+          onBookingSuccess={handleBookingSuccess}
+        />
       )}
     </div>
   );

@@ -11,6 +11,18 @@ const UPIPayment = ({ booking, onPaymentComplete, onClose }) => {
 
   useEffect(() => {
     generateUPIQR();
+    
+    // Debug logging
+    console.log('💳 UPI Payment Modal - Business Data:', {
+      businessName: booking.businessId?.businessName,
+      upiId: booking.businessId?.upiId,
+      hasUpiId: !!booking.businessId?.upiId
+    });
+    
+    // Show warning if UPI ID is missing
+    if (!booking.businessId?.upiId) {
+      toast.warning('⚠️ Business UPI ID not configured. Using placeholder. Please contact business to update their UPI ID.');
+    }
   }, []);
 
   const generateUPIQR = () => {
@@ -18,6 +30,12 @@ const UPIPayment = ({ booking, onPaymentComplete, onClose }) => {
     const businessUPI = booking.businessId?.upiId || 'business@upi';
     const amount = booking.amount;
     const bookingId = booking._id;
+    
+    console.log('💳 Generating UPI QR for:', {
+      upiId: businessUPI,
+      amount: amount,
+      businessName: booking.businessId?.businessName
+    });
     
     // Generate UPI payment URL
     const upiUrl = `upi://pay?pa=${businessUPI}&pn=${booking.businessId?.businessName || 'Business'}&am=${amount}&cu=INR&tn=Booking Payment ${bookingId}`;
@@ -33,6 +51,7 @@ const UPIPayment = ({ booking, onPaymentComplete, onClose }) => {
     setTimeout(() => setCopied(false), 2000);
   };
 
+
   const handlePaymentSubmit = async (e) => {
     e.preventDefault();
     
@@ -45,13 +64,14 @@ const UPIPayment = ({ booking, onPaymentComplete, onClose }) => {
       setSubmitting(true);
       
       const response = await axios.patch(`/api/booking/${booking._id}/payment`, {
-        transactionId: transactionId.trim()
+        transactionId: transactionId.trim(),
+        paymentMethod: 'upi'
       }, {
         withCredentials: true
       });
 
       if (response.data.success) {
-        toast.success('Payment confirmed successfully!');
+        toast.success('✅ Payment submitted! Waiting for business verification...');
         onPaymentComplete && onPaymentComplete(response.data.booking);
         onClose && onClose();
       }
@@ -101,10 +121,19 @@ const UPIPayment = ({ booking, onPaymentComplete, onClose }) => {
             <FaQrcode className="text-4xl text-blue-600 mx-auto mb-2" />
             <p className="text-sm text-blue-800 mb-2">Scan QR code with any UPI app</p>
             
-            {/* QR Code Placeholder - In production, use a QR code library */}
-            <div className="bg-white border-2 border-dashed border-blue-300 rounded-lg p-8 mb-3">
-              <div className="text-6xl text-blue-400 mb-2">⬜</div>
-              <p className="text-xs text-gray-500">QR Code for ₹{booking.amount}</p>
+            {/* QR Code - Using external API */}
+            <div className="bg-white border-2 border-solid border-blue-300 rounded-lg p-4 mb-3">
+              {qrCodeData ? (
+                <img 
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(qrCodeData)}`}
+                  alt="UPI Payment QR Code"
+                  className="mx-auto"
+                  style={{ width: '200px', height: '200px' }}
+                />
+              ) : (
+                <div className="text-6xl text-blue-400 mb-2">⬜</div>
+              )}
+              <p className="text-xs text-gray-500 mt-2">Scan to pay ₹{booking.amount}</p>
             </div>
             
             <div className="text-xs text-blue-700">
@@ -153,27 +182,28 @@ const UPIPayment = ({ booking, onPaymentComplete, onClose }) => {
             </p>
           </div>
 
-          <div className="flex space-x-3">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 bg-gray-500 text-white py-3 px-4 rounded-lg hover:bg-gray-600 transition-colors"
-            >
-              Cancel
-            </button>
+          <div className="space-y-3">
             <button
               type="submit"
               disabled={submitting || !transactionId.trim()}
-              className="flex-1 bg-green-500 text-white py-3 px-4 rounded-lg hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="w-full bg-green-500 text-white py-3 px-4 rounded-lg hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-semibold"
             >
-              {submitting ? 'Confirming...' : 'Confirm Payment'}
+              {submitting ? 'Processing...' : '✓ Confirm Payment'}
+            </button>
+            
+            <button
+              type="button"
+              onClick={onClose}
+              className="w-full bg-gray-500 text-white py-2 px-4 rounded-lg hover:bg-gray-600 transition-colors"
+            >
+              Cancel
             </button>
           </div>
         </form>
 
         <div className="mt-4 text-center">
           <p className="text-xs text-gray-500">
-            Your booking will be confirmed once payment is verified
+            ⏳ After submitting transaction ID, please wait for business to verify your payment
           </p>
         </div>
       </div>

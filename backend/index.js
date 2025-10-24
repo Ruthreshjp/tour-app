@@ -4,11 +4,14 @@ import userRoute from "./routes/user.route.js";
 import packageRoute from "./routes/package.route.js";
 import ratingRoute from "./routes/rating.route.js";
 import bookingRoute from "./routes/booking.route.js";
+import bookingRoutes from "./routes/bookingRoutes.js";
 import locationRoute from "./routes/location.route.js";
 import geocodeRoute from "./routes/geocode.route.js";
 import paymentRoutes from "./routes/payment.routes.js";
 import imageRoutes from "./routes/imageRoutes.js";
 import businessRoutes from "./routes/businessRoutes.js";
+import packageBookingRoutes from "./routes/packageBooking.route.js";
+import analyticsRoutes from "./routes/analytics.routes.js";
 import dotenv from "dotenv";
 import path from "path";
 import cors from "cors";
@@ -30,7 +33,7 @@ app.use(cookieParser());
 app.use(cors({
   origin: ["http://localhost:5173", "http://localhost:5174", "http://localhost:5175", "http://localhost:5176"],
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
   exposedHeaders: ['set-cookie']
 }));
@@ -153,17 +156,24 @@ app.post("/api/send-email", async (req, res) => {
   }
 });
 
+// Static file serving for uploads and images
+app.use('/uploads', express.static('uploads'));
+app.use('/images', express.static('uploads')); // Serve uploads directory as /images for compatibility
+
 // API routes
 app.use("/api/auth", authRoute);
 app.use("/api/user", userRoute);
 app.use("/api/package", packageRoute);
 app.use("/api/rating", ratingRoute);
 app.use("/api/booking", bookingRoute);
+app.use("/api/booking", bookingRoutes);
 app.use("/api/payment", paymentRoutes);
 app.use("/api/location", locationRoute);
 app.use("/api/geocode", geocodeRoute);
 app.use("/api/images", imageRoutes);
 app.use("/api/business", businessRoutes);
+app.use("/api/package-booking", packageBookingRoutes);
+app.use("/api/analytics", analyticsRoutes);
 
 // 404 Error handler
 app.use((req, res, next) => {

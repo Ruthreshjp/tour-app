@@ -53,6 +53,20 @@ const businessSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+    website: {
+      type: String,
+      trim: true,
+    },
+    googleMapsLink: {
+      type: String,
+      trim: true,
+    },
+    // Payment Information
+    upiId: {
+      type: String,
+      trim: true,
+      default: null,
+    },
     isVerified: {
       type: Boolean,
       default: false,
@@ -121,6 +135,50 @@ const businessSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    totalViews: {
+      type: Number,
+      default: 0,
+    },
+    views: [{
+      userId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+      },
+      userName: {
+        type: String,
+        trim: true
+      },
+      userEmail: {
+        type: String,
+        lowercase: true,
+        trim: true
+      },
+      viewedAt: {
+        type: Date,
+        default: Date.now
+      },
+      source: {
+        type: String,
+        enum: ['search', 'nearby', 'category', 'direct'],
+        default: 'direct'
+      }
+    }],
+    // Business-specific data (flexible schema for different business types)
+    businessSpecific: {
+      type: mongoose.Schema.Types.Mixed,
+      default: {}
+    },
+    
+    // Menu data for restaurants and cafes
+    menu: {
+      menuCardImages: [{
+        type: String
+      }],
+      items: [{
+        type: mongoose.Schema.Types.Mixed
+      }]
+    },
+    
     businessHours: {
       monday: {
         isOpen: { type: Boolean, default: true },
@@ -372,6 +430,156 @@ const businessSchema = new mongoose.Schema(
         default: Date.now
       }
     }],
+    // Menu items for restaurants and cafes
+    menuItems: [{
+      name: {
+        type: String,
+        required: true
+      },
+      description: {
+        type: String,
+        default: ''
+      },
+      category: {
+        type: String,
+        required: true,
+        enum: ['appetizer', 'main-course', 'dessert', 'beverages', 'snacks', 'breakfast', 'lunch', 'dinner', 'special'],
+        default: 'main-course'
+      },
+      price: {
+        type: Number,
+        required: true,
+        min: 0
+      },
+      isVeg: {
+        type: Boolean,
+        default: true
+      },
+      isAvailable: {
+        type: Boolean,
+        default: true
+      },
+      ingredients: {
+        type: String,
+        default: ''
+      },
+      allergens: {
+        type: String,
+        default: ''
+      },
+      images: [{
+        type: String // MongoDB image IDs
+      }],
+      createdAt: {
+        type: Date,
+        default: Date.now
+      }
+    }],
+    // Vehicles for cab businesses
+    vehicles: [{
+      vehicleNumber: {
+        type: String,
+        required: true
+      },
+      vehicleType: {
+        type: String,
+        enum: ['hatchback', 'sedan', 'suv', 'luxury', 'tempo-traveller', 'bus'],
+        default: 'sedan'
+      },
+      model: {
+        type: String,
+        required: true
+      },
+      year: {
+        type: Number,
+        default: new Date().getFullYear()
+      },
+      capacity: {
+        type: Number,
+        required: true,
+        min: 1
+      },
+      isAC: {
+        type: Boolean,
+        default: true
+      },
+      fuelType: {
+        type: String,
+        enum: ['petrol', 'diesel', 'cng', 'electric', 'hybrid'],
+        default: 'petrol'
+      },
+      features: [{
+        type: String
+      }],
+      images: [{
+        type: String
+      }],
+      pricing: {
+        perKm: {
+          type: Number,
+          default: 0,
+          min: 0
+        },
+        baseFare: {
+          type: Number,
+          default: 0,
+          min: 0
+        },
+        waitingCharges: {
+          type: Number,
+          default: 0,
+          min: 0
+        },
+        nightCharges: {
+          type: Number,
+          default: 0,
+          min: 0
+        }
+      },
+      availability: {
+        type: Boolean,
+        default: true
+      },
+      driverName: {
+        type: String,
+        default: ''
+      },
+      driverPhone: {
+        type: String,
+        default: ''
+      },
+      licenseNumber: {
+        type: String,
+        default: ''
+      },
+      insuranceExpiry: {
+        type: String,
+        default: ''
+      },
+      description: {
+        type: String,
+        default: ''
+      },
+      createdAt: {
+        type: Date,
+        default: Date.now
+      }
+    }],
+    // Payment information
+    upiId: {
+      type: String,
+      trim: true,
+      default: null,
+    },
+    setupCompleted: {
+      type: Boolean,
+      default: false,
+    },
+    status: {
+      type: String,
+      enum: ['pending', 'approved', 'rejected'],
+      default: 'approved',
+    },
     lastLoginAt: {
       type: Date,
       default: null,

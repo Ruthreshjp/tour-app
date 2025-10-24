@@ -243,11 +243,40 @@ const BookingManagement = () => {
                     <div className="space-y-1 text-sm text-gray-600">
                       <p><strong>Booking ID:</strong> {booking._id.slice(-8)}</p>
                       <p><strong>Booked On:</strong> {formatDate(booking.createdAt)}</p>
+                      <p><strong>Amount:</strong> ₹{booking.amount}</p>
                       <p><strong>Status:</strong> 
                         <span className={`ml-2 px-2 py-1 rounded text-xs ${getStatusColor(booking.status)}`}>
                           {booking.status}
                         </span>
                       </p>
+                    </div>
+                  </div>
+
+                  {/* Payment Info */}
+                  <div className="space-y-2">
+                    <h4 className="font-medium text-gray-700">Payment Information</h4>
+                    <div className="space-y-1 text-sm text-gray-600">
+                      <p><strong>Payment Status:</strong> 
+                        <span className={`ml-2 px-2 py-1 rounded text-xs ${
+                          booking.paymentStatus === 'paid' ? 'bg-green-100 text-green-800' : 
+                          booking.paymentStatus === 'pending' ? 'bg-yellow-100 text-yellow-800' : 
+                          'bg-gray-100 text-gray-800'
+                        }`}>
+                          {booking.paymentStatus || 'pending'}
+                        </span>
+                      </p>
+                      {booking.transactionId && (
+                        <>
+                          <p><strong>Payment Method:</strong> 
+                            <span className="ml-2 text-green-600 font-medium">💳 UPI Payment</span>
+                          </p>
+                          <p><strong>Transaction ID:</strong> 
+                            <span className="ml-2 font-mono text-xs bg-gray-100 px-2 py-1 rounded">
+                              {booking.transactionId}
+                            </span>
+                          </p>
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>

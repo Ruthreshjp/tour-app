@@ -148,6 +148,10 @@ const AdminDashboard = () => {
                 <p className="text-base font-semibold py-2 border border-gray-300 px-3">
                   {currentUser.address}
                 </p>
+                <p>UPI ID</p>
+                <p className="text-base font-semibold py-2 border border-gray-300 px-3">
+                  {currentUser.upiId || <span className="text-gray-400 text-sm">Not set</span>}
+                </p>
                 <div className="flex items-center justify-between">
                   <button
                     onClick={handleLogout}

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useSelector, useDispatch } from "react-redux";
-import { logOutSuccess } from "../../redux/user/userSlice";
+import { logout as businessLogout } from "../../redux/business/businessSlice";
 
 const BusinessDashboard = () => {
   const navigate = useNavigate();
@@ -10,6 +10,14 @@ const BusinessDashboard = () => {
   const { currentUser } = useSelector((state) => state.user);
   const [businessData, setBusinessData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [notifications, setNotifications] = useState([]);
+  const [analytics, setAnalytics] = useState({
+    totalViews: 0,
+    totalBookings: 0,
+    totalReviews: 0,
+    averageRating: 0
+  });
+  const [analyticsLoading, setAnalyticsLoading] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem("businessToken");
@@ -18,6 +26,7 @@ const BusinessDashboard = () => {
       return;
     }
     fetchBusinessData();
+    fetchNotifications();
   }, [navigate]);
 
   const fetchBusinessData = async () => {
@@ -36,6 +45,8 @@ const BusinessDashboard = () => {
       
       if (data?.success) {
         setBusinessData(data.business);
+        // Fetch analytics after business data is loaded
+        fetchAnalytics();
       } else {
         toast.error("Failed to fetch business data");
         if (data?.message === "Unauthorized") {
@@ -50,16 +61,76 @@ const BusinessDashboard = () => {
     }
   };
 
+  const fetchAnalytics = async () => {
+    try {
+      setAnalyticsLoading(true);
+      const token = localStorage.getItem("businessToken");
+      const res = await fetch("/api/analytics/business/analytics", {
+        method: "GET",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+      });
+      
+      const data = await res.json();
+      
+      if (data?.success) {
+        setAnalytics(data.analytics);
+      } else {
+        console.error("Failed to fetch analytics:", data?.message);
+        // Keep default values if fetch fails
+      }
+    } catch (error) {
+      console.error("Error fetching analytics:", error);
+      // Keep default values if fetch fails
+    } finally {
+      setAnalyticsLoading(false);
+    }
+  };
+
+  const fetchNotifications = async () => {
+    try {
+      const token = localStorage.getItem("businessToken");
+      const res = await fetch("/api/business/notifications", {
+        method: "GET",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+      });
+      
+      const data = await res.json();
+      
+      if (data?.success) {
+        // Get only the 3 most recent notifications for dashboard
+        setNotifications(data.notifications.slice(0, 3));
+      }
+    } catch (error) {
+      console.error("Error fetching notifications:", error);
+    }
+  };
+
   const handleLogout = () => {
+    // Clear Redux business state
+    dispatch(businessLogout());
+    
+    // Clear localStorage
     localStorage.removeItem("businessToken");
     localStorage.removeItem("businessData");
-    dispatch(logOutSuccess());
     
     // Trigger custom event for Header component to update
     window.dispatchEvent(new Event('businessLogout'));
     
     toast.success("Logged out successfully");
+    
+    // Navigate to login and force reload to ensure clean state
     navigate("/business/login");
+    setTimeout(() => {
+      window.location.reload();
+    }, 100);
   };
 
   const handleNavigation = (route) => {
@@ -171,38 +242,58 @@ const BusinessDashboard = () => {
             </div>
 
             {/* Business Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg shadow-md p-6 text-white">
+            <div className={`grid grid-cols-1 ${businessData.businessType === 'shopping' ? 'md:grid-cols-2' : 'md:grid-cols-3'} gap-4`}>
+              <div 
+                className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg shadow-md p-6 text-white cursor-pointer hover:shadow-lg transition-all hover:scale-105"
+                onClick={() => handleNavigation('/business/analytics/views')}
+              >
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-blue-100">Total Views</p>
-                    <p className="text-2xl font-bold">1,234</p>
+                    <p className="text-2xl font-bold">{analyticsLoading ? '...' : analytics.totalViews.toLocaleString()}</p>
                   </div>
                   <div className="text-3xl opacity-80">👁️</div>
                 </div>
-                <p className="text-blue-100 text-sm mt-2">+12% from last month</p>
+                <p className="text-blue-100 text-sm mt-2">Click to view who viewed your business</p>
               </div>
               
-              <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-lg shadow-md p-6 text-white">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-green-100">Total Bookings</p>
-                    <p className="text-2xl font-bold">89</p>
+              {businessData.businessType !== 'shopping' && (
+                <div 
+                  className="bg-gradient-to-r from-green-500 to-green-600 rounded-lg shadow-md p-6 text-white cursor-pointer hover:shadow-lg transition-all hover:scale-105"
+                  onClick={() => handleNavigation('/business/analytics/bookings')}
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-green-100">Total Bookings</p>
+                      <p className="text-2xl font-bold">{analyticsLoading ? '...' : analytics.totalBookings.toLocaleString()}</p>
+                    </div>
+                    <div className="text-3xl opacity-80">📅</div>
                   </div>
-                  <div className="text-3xl opacity-80">📅</div>
+                  <p className="text-green-100 text-sm mt-2">Click to view booking details</p>
                 </div>
-                <p className="text-green-100 text-sm mt-2">+8% from last month</p>
-              </div>
+              )}
               
-              <div className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg shadow-md p-6 text-white">
+              <div 
+                className="bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-lg shadow-md p-6 text-white cursor-pointer hover:shadow-lg transition-all hover:scale-105"
+                onClick={() => handleNavigation('/business/analytics/ratings')}
+              >
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-purple-100">Revenue</p>
-                    <p className="text-2xl font-bold">₹45,678</p>
+                    <p className="text-yellow-100">Rating</p>
+                    <div className="flex items-center gap-1 mt-1">
+                      <p className="text-2xl font-bold">{analyticsLoading ? '...' : analytics.averageRating.toFixed(1)}</p>
+                      <div className="flex text-yellow-200">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <span key={star} className={star <= analytics.averageRating ? "text-yellow-200" : "text-yellow-300/50"}>
+                            ⭐
+                          </span>
+                        ))}
+                      </div>
+                    </div>
                   </div>
-                  <div className="text-3xl opacity-80">💰</div>
+                  <div className="text-3xl opacity-80">⭐</div>
                 </div>
-                <p className="text-purple-100 text-sm mt-2">+15% from last month</p>
+                <p className="text-yellow-100 text-sm mt-2">Based on {analyticsLoading ? '...' : analytics.totalReviews} reviews</p>
               </div>
             </div>
 
@@ -258,29 +349,51 @@ const BusinessDashboard = () => {
               </div>
               
               <div className="space-y-4">
-                <div className="flex items-center p-3 bg-gray-50 rounded-lg">
-                  <div className="text-2xl mr-3">🔔</div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-800">New booking received</p>
-                    <p className="text-xs text-gray-500">2 hours ago</p>
+                {notifications.length === 0 ? (
+                  <div className="text-center py-8">
+                    <div className="text-4xl mb-2">🔔</div>
+                    <p className="text-gray-600 text-sm">No notifications yet</p>
+                    <p className="text-gray-500 text-xs mt-1">New bookings and updates will appear here</p>
                   </div>
-                </div>
-                
-                <div className="flex items-center p-3 bg-gray-50 rounded-lg">
-                  <div className="text-2xl mr-3">👁️</div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-800">Your listing was viewed 15 times</p>
-                    <p className="text-xs text-gray-500">5 hours ago</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-center p-3 bg-gray-50 rounded-lg">
-                  <div className="text-2xl mr-3">⭐</div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-800">New review received (4.5 stars)</p>
-                    <p className="text-xs text-gray-500">1 day ago</p>
-                  </div>
-                </div>
+                ) : (
+                  notifications.map((notification, index) => {
+                    const getIcon = (type) => {
+                      const icons = {
+                        booking: "🔔",
+                        review: "⭐",
+                        view: "👁️",
+                        payment: "💳",
+                        cancellation: "❌",
+                      };
+                      return icons[type] || "📢";
+                    };
+
+                    const formatTimeAgo = (date) => {
+                      const now = new Date();
+                      const notificationDate = new Date(date);
+                      const diffInMs = now - notificationDate;
+                      const diffInMinutes = Math.floor(diffInMs / 60000);
+                      const diffInHours = Math.floor(diffInMinutes / 60);
+                      const diffInDays = Math.floor(diffInHours / 24);
+
+                      if (diffInMinutes < 1) return "Just now";
+                      if (diffInMinutes < 60) return `${diffInMinutes} minute${diffInMinutes > 1 ? "s" : ""} ago`;
+                      if (diffInHours < 24) return `${diffInHours} hour${diffInHours > 1 ? "s" : ""} ago`;
+                      if (diffInDays < 7) return `${diffInDays} day${diffInDays > 1 ? "s" : ""} ago`;
+                      return notificationDate.toLocaleDateString();
+                    };
+
+                    return (
+                      <div key={notification._id || index} className="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                        <div className="text-2xl mr-3">{getIcon(notification.type)}</div>
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-gray-800">{notification.title}</p>
+                          <p className="text-xs text-gray-500">{formatTimeAgo(notification.createdAt)}</p>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
                 
                 <div className="text-center pt-4">
                   <button 

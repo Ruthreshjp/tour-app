@@ -137,11 +137,7 @@ const registerBusiness = async (req, res) => {
 
     console.log("💾 Creating business document...");
     
-    // Generate permanent login code during registration
-    const permanentLoginCode = Math.floor(100000 + Math.random() * 900000).toString();
-    console.log("🔑 Generated permanent login code:", permanentLoginCode);
-    
-    // Create business
+    // Create business without login code - will be generated after admin approval
     const business = new Business({
       businessName,
       email,
@@ -153,8 +149,8 @@ const registerBusiness = async (req, res) => {
       state,
       pincode,
       description,
-      loginCode: permanentLoginCode, // Set permanent login code
-      loginCodeExpiry: null, // No expiry - permanent
+      loginCode: null, // No login code until approved
+      loginCodeExpiry: null,
     });
 
     // Generate email verification token
@@ -169,18 +165,12 @@ const registerBusiness = async (req, res) => {
     await business.save();
     console.log("✅ Business saved successfully with ID:", business._id);
 
-    // Send registration confirmation email with permanent login code
+    // Send registration confirmation email without login code
     const registrationEmailHtml = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2 style="color: #EB662B;">Registration Received - Travel-Zone</h2>
         <p>Hello ${businessName},</p>
         <p>Thank you for registering your business with Travel-Zone. Your registration has been submitted successfully and is now under review.</p>
-        
-        <div style="background-color: #e8f5e8; padding: 20px; border-radius: 8px; margin: 20px 0; text-align: center;">
-          <h3 style="color: #2d5a2d; margin-top: 0;">🔑 Your Permanent Login Code</h3>
-          <p><strong>Login Code:</strong> <span style="font-size: 24px; font-weight: bold; color: #EB662B; background: white; padding: 8px 16px; border-radius: 4px; display: inline-block;">${permanentLoginCode}</span></p>
-          <p style="color: #666; font-size: 14px;">Keep this code safe - you'll use it for all future logins!</p>
-        </div>
         
         <p><strong>Business Details:</strong></p>
         <ul>
@@ -193,11 +183,10 @@ const registerBusiness = async (req, res) => {
         <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0;">
           <h3 style="color: #EB662B; margin-top: 0;">What's Next?</h3>
           <p>📋 Our admin team will review your business registration</p>
-          <p>✅ Once approved, you can login using your permanent login code above</p>
+          <p>✅ Once approved, you'll receive your login credentials via email</p>
           <p>🚀 You can then access your business dashboard and start managing your listings</p>
         </div>
         <p>We'll notify you via email once the review is complete. This usually takes 1-2 business days.</p>
-        <p><strong>Remember:</strong> Your login code <strong>${permanentLoginCode}</strong> is permanent and will never change!</p>
         <p>Thank you for choosing Travel-Zone!</p>
       </div>
     `;
@@ -317,10 +306,15 @@ const sendLoginCode = async (req, res) => {
     const expiryTime = new Date();
     expiryTime.setMinutes(expiryTime.getMinutes() + 15);
     
-    // Update business with new temporary code
-    business.loginCode = loginCode;
-    business.loginCodeExpiry = expiryTime;
-    await business.save();
+    // Update business with new temporary code using findByIdAndUpdate to avoid validation
+    await Business.findByIdAndUpdate(
+      business._id,
+      { 
+        loginCode: loginCode,
+        loginCodeExpiry: expiryTime
+      },
+      { runValidators: false }
+    );
     
     console.log(`🔑 Generated new login code: ${loginCode} (expires at ${expiryTime.toLocaleTimeString()})`);
 
@@ -364,16 +358,42 @@ const verifyLoginCode = async (req, res) => {
   try {
     const { email, loginCode } = req.body;
 
+    console.log("🔍 Verifying login code for:", email, "Code:", loginCode);
+
     const business = await Business.findOne({ email });
     if (!business) {
+      console.log("❌ Business not found for email:", email);
       return res.status(404).json({
         success: false,
         message: "Business not found",
       });
     }
 
+    console.log("✅ Business found:", business.businessName);
+    console.log("📊 Business status - Verified:", business.isVerified, "Active:", business.isActive);
+    console.log("🔑 Business login code:", business.loginCode ? "EXISTS" : "NOT SET");
+
+    // Check if business is approved
+    if (!business.isVerified) {
+      console.log("❌ Business not approved yet");
+      return res.status(403).json({
+        success: false,
+        message: "Business not approved yet. Please wait for admin approval.",
+      });
+    }
+
+    // Check if business has login code (should be set after approval)
+    if (!business.loginCode) {
+      console.log("❌ Business has no login code - this shouldn't happen for approved businesses");
+      return res.status(400).json({
+        success: false,
+        message: "Login code not available. Please contact support.",
+      });
+    }
+
     // Check if account is locked
     if (business.isLocked) {
+      console.log("❌ Account is locked");
       return res.status(423).json({
         success: false,
         message: "Account is temporarily locked due to multiple failed attempts. Please try again later.",
@@ -381,7 +401,9 @@ const verifyLoginCode = async (req, res) => {
     }
 
     // Verify login code
+    console.log("🔍 Comparing codes - Provided:", loginCode, "Stored:", business.loginCode);
     if (!business.verifyLoginCode(loginCode)) {
+      console.log("❌ Login code verification failed");
       await business.incLoginAttempts();
       return res.status(400).json({
         success: false,
@@ -389,11 +411,23 @@ const verifyLoginCode = async (req, res) => {
       });
     }
 
-    // Clear the login code after successful verification (one-time use)
-    business.clearLoginCode();
-    await business.save();
-    
-    console.log(`✅ Login code verified and cleared for: ${business.email}`);
+    console.log("✅ Login code verified successfully");
+
+    // Only clear temporary login codes (ones with expiry)
+    // Permanent codes (approved businesses) should be kept
+    if (business.loginCodeExpiry) {
+      console.log("🗑️ Clearing temporary login code");
+      await Business.findByIdAndUpdate(
+        business._id,
+        { 
+          $unset: { loginCode: 1, loginCodeExpiry: 1 }
+        },
+        { runValidators: false }
+      );
+      console.log(`✅ Temporary login code cleared for: ${business.email}`);
+    } else {
+      console.log("🔒 Keeping permanent login code for approved business");
+    }
 
     res.json({
       success: true,
@@ -467,12 +501,17 @@ const loginBusiness = async (req, res) => {
     }
 
     // Clear login code after successful login
+    // Update last login time and clear login code if used
+    const updateData = { lastLoginAt: new Date() };
     if (loginCode) {
-      business.clearLoginCode();
+      updateData.$unset = { loginCode: 1, loginCodeExpiry: 1 };
     }
     
-    business.lastLoginAt = new Date();
-    await business.save();
+    await Business.findByIdAndUpdate(
+      business._id,
+      updateData,
+      { runValidators: false }
+    );
 
     console.log(`✅ Business login successful: ${business.businessName}`);
 
@@ -555,8 +594,12 @@ const quickLoginBusiness = async (req, res) => {
       await business.resetLoginAttempts();
     }
 
-    business.lastLoginAt = new Date();
-    await business.save();
+    // Update last login time without validation
+    await Business.findByIdAndUpdate(
+      business._id,
+      { lastLoginAt: new Date() },
+      { runValidators: false }
+    );
 
     console.log(`✅ Quick login successful: ${business.businessName}`);
 
@@ -621,7 +664,7 @@ const getBusinessProfile = async (req, res) => {
 // Check authentication
 const checkAuth = async (req, res) => {
   try {
-    const business = await Business.findById(req.businessId).select("businessName email businessType isVerified");
+    const business = await Business.findById(req.businessId).select("businessName email businessType isVerified setupCompleted description phone website googleMapsLink location address city state pincode profileImage businessImages businessHours businessSpecific menu");
     
     if (!business) {
       return res.status(401).json({
@@ -704,18 +747,15 @@ const updateBusinessStatus = async (req, res) => {
 
     await business.save();
 
-    // Send notification email with existing login code if business is approved
-    if (isVerified && business.email) {
-      // Business should already have a permanent login code from registration
-      // No need to generate a new one - just use the existing permanent code
-      if (!business.loginCode) {
-        console.log('⚠️  Warning: Business approved but no login code found. This should not happen with new registrations.');
-        // Only generate if somehow missing (for old businesses)
-        const loginCode = Math.floor(100000 + Math.random() * 900000).toString();
-        business.loginCode = loginCode;
-        business.loginCodeExpires = null;
-        await business.save();
-      }
+    // Generate and send login code when business is approved for the first time
+    if (isVerified && business.email && !business.loginCode) {
+      console.log('🔑 Generating login code for newly approved business');
+      // Generate permanent login code for approved business
+      const loginCode = Math.floor(100000 + Math.random() * 900000).toString();
+      business.loginCode = loginCode;
+      business.loginCodeExpiry = null; // Permanent code
+      await business.save();
+      console.log('✅ Login code generated and saved:', loginCode);
 
       const emailHtml = `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -819,6 +859,10 @@ const setupBusiness = async (req, res) => {
   try {
     const { businessId, setupData } = req.body;
 
+    console.log('🔧 Business setup request received');
+    console.log('📋 Business ID:', businessId);
+    console.log('📋 Setup data keys:', Object.keys(setupData));
+
     if (!businessId || !setupData) {
       return res.status(400).json({
         success: false,
@@ -834,25 +878,65 @@ const setupBusiness = async (req, res) => {
       });
     }
 
+    // Prepare update data
+    const updateData = {
+      description: setupData.businessDescription,
+      phone: setupData.contactPhone,
+      website: setupData.website,
+      googleMapsLink: setupData.googleMapsLink,
+      upiId: setupData.upiId,
+      address: setupData.location?.address,
+      city: setupData.location?.city,
+      state: setupData.location?.state,
+      pincode: setupData.location?.pincode,
+      profileImage: setupData.mainImage,
+      businessImages: setupData.additionalImages,
+      businessHours: setupData.operatingHours,
+      businessSpecific: setupData.businessSpecific,
+      menu: setupData.menu,
+      setupCompleted: true,
+    };
+
+    // Only update location coordinates if they exist
+    if (setupData.location?.longitude && setupData.location?.latitude) {
+      updateData.location = {
+        type: 'Point',
+        coordinates: [setupData.location.longitude, setupData.location.latitude]
+      };
+    }
+
+    console.log('💾 Updating business with data:', {
+      description: updateData.description,
+      phone: updateData.phone,
+      website: updateData.website,
+      upiId: updateData.upiId,
+      city: updateData.city,
+      state: updateData.state,
+      pincode: updateData.pincode,
+      hasLocation: !!updateData.location,
+      hasBusinessHours: !!updateData.businessHours,
+      hasBusinessSpecific: !!updateData.businessSpecific,
+      businessSpecific: updateData.businessSpecific
+    });
+
     // Update business with setup data
     const updatedBusiness = await Business.findByIdAndUpdate(
       businessId,
-      {
-        $set: {
-          businessDescription: setupData.businessDescription,
-          contactPhone: setupData.contactPhone,
-          website: setupData.website,
-          location: setupData.location,
-          mainImage: setupData.mainImage,
-          additionalImages: setupData.additionalImages,
-          operatingHours: setupData.operatingHours,
-          businessSpecific: setupData.businessSpecific,
-          menu: setupData.menu,
-          setupCompleted: true,
-        },
-      },
+      { $set: updateData },
       { new: true }
     );
+
+    console.log('✅ Business updated successfully');
+    console.log('📊 Updated fields:', {
+      description: updatedBusiness.description,
+      phone: updatedBusiness.phone,
+      website: updatedBusiness.website,
+      upiId: updatedBusiness.upiId,
+      city: updatedBusiness.city,
+      state: updatedBusiness.state,
+      pincode: updatedBusiness.pincode,
+      businessSpecific: updatedBusiness.businessSpecific
+    });
 
     res.json({
       success: true,
@@ -860,10 +944,11 @@ const setupBusiness = async (req, res) => {
       business: updatedBusiness,
     });
   } catch (error) {
-    console.error("Business setup error:", error);
+    console.error("❌ Business setup error:", error);
     res.status(500).json({
       success: false,
       message: "Server error occurred",
+      error: error.message
     });
   }
 };
@@ -896,7 +981,8 @@ const getRooms = async (req, res) => {
 
 const createRoom = async (req, res) => {
   try {
-    const { businessId, ...roomData } = req.body;
+    const roomData = req.body;
+    const businessId = req.businessId; // Get from middleware instead of request body
 
     const business = await Business.findById(businessId);
     if (!business) {
@@ -911,9 +997,12 @@ const createRoom = async (req, res) => {
       createdAt: new Date(),
     };
 
-    business.rooms = business.rooms || [];
-    business.rooms.push(newRoom);
-    await business.save();
+    // Use findByIdAndUpdate to avoid validation on entire document
+    const updatedBusiness = await Business.findByIdAndUpdate(
+      businessId,
+      { $push: { rooms: newRoom } },
+      { new: true, runValidators: false }
+    );
 
     res.json({
       success: true,
@@ -950,13 +1039,19 @@ const updateRoom = async (req, res) => {
       });
     }
 
-    business.rooms[roomIndex] = { ...business.rooms[roomIndex], ...roomData };
-    await business.save();
+    // Use findOneAndUpdate to avoid validation on entire document
+    const updatedBusiness = await Business.findOneAndUpdate(
+      { "rooms._id": roomId },
+      { $set: { "rooms.$": { ...business.rooms[roomIndex]._doc, ...roomData } } },
+      { new: true, runValidators: false }
+    );
 
+    const updatedRoom = updatedBusiness.rooms.find(room => room._id.toString() === roomId);
+    
     res.json({
       success: true,
       message: "Room updated successfully",
-      room: business.rooms[roomIndex],
+      room: updatedRoom,
     });
   } catch (error) {
     console.error("Update room error:", error);
@@ -1052,7 +1147,8 @@ const getTables = async (req, res) => {
 
 const createTable = async (req, res) => {
   try {
-    const { businessId, ...tableData } = req.body;
+    const tableData = req.body;
+    const businessId = req.businessId; // Get from middleware
     const business = await Business.findById(businessId);
     if (!business) {
       return res.status(404).json({
@@ -1066,9 +1162,12 @@ const createTable = async (req, res) => {
       createdAt: new Date(),
     };
 
-    business.tables = business.tables || [];
-    business.tables.push(newTable);
-    await business.save();
+    // Use findByIdAndUpdate to avoid validation on entire document
+    const updatedBusiness = await Business.findByIdAndUpdate(
+      businessId,
+      { $push: { tables: newTable } },
+      { new: true, runValidators: false }
+    );
 
     res.json({
       success: true,
@@ -1512,13 +1611,299 @@ const getAllHotels = async (req, res) => {
   }
 };
 
+// Get business statistics for admin
+const getBusinessStats = async (req, res) => {
+  try {
+    const { businessId } = req.params;
+    
+    // Import Booking model
+    const Booking = (await import('../models/booking.model.js')).default;
+    
+    // Get business details
+    const business = await Business.findById(businessId);
+    if (!business) {
+      return res.status(404).json({
+        success: false,
+        message: 'Business not found'
+      });
+    }
+
+    // Get all bookings for this business
+    const bookings = await Booking.find({ businessId })
+      .populate('userId', 'username email phone')
+      .sort({ createdAt: -1 });
+
+    // Calculate statistics
+    const totalBookings = bookings.length;
+    
+    const totalRevenue = bookings
+      .filter(b => b.paymentStatus === 'paid')
+      .reduce((sum, b) => sum + (b.amount || 0), 0);
+    
+    const pendingPayments = bookings
+      .filter(b => b.paymentStatus === 'pending')
+      .reduce((sum, b) => sum + (b.amount || 0), 0);
+    
+    const pendingBookings = bookings.filter(b => b.status === 'pending').length;
+    const confirmedBookings = bookings.filter(b => b.status === 'confirmed').length;
+    const cancelledBookings = bookings.filter(b => b.status === 'cancelled').length;
+    const completedBookings = bookings.filter(b => b.status === 'completed' || b.status === 'Booked').length;
+
+    // Get recent bookings (last 10)
+    const recentBookings = bookings.slice(0, 10).map(booking => ({
+      customerName: booking.userId?.username || 'Unknown',
+      date: booking.bookingDetails?.checkIn || booking.createdAt,
+      amount: booking.amount || 0,
+      status: booking.status
+    }));
+
+    res.json({
+      success: true,
+      stats: {
+        totalBookings,
+        totalRevenue,
+        pendingPayments,
+        pendingBookings,
+        confirmedBookings,
+        cancelledBookings,
+        completedBookings,
+        recentBookings
+      }
+    });
+  } catch (error) {
+    console.error('Get business stats error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error occurred',
+      error: error.message
+    });
+  }
+};
+
+// Get business notifications
+const getBusinessNotifications = async (req, res) => {
+  try {
+    const businessId = req.businessId;
+
+    if (!businessId) {
+      return res.status(401).json({ success: false, message: "Unauthorized" });
+    }
+
+    // Import Booking model
+    const Booking = (await import("../models/booking.model.js")).default;
+
+    // Fetch recent bookings for this business
+    const recentBookings = await Booking.find({ businessId })
+      .populate('userId', 'username email')
+      .sort({ createdAt: -1 })
+      .limit(50);
+
+    // Transform bookings into notifications
+    const notifications = recentBookings.map(booking => {
+      let title = '';
+      let message = '';
+      let type = 'booking';
+
+      if (booking.status === 'pending') {
+        title = 'New Booking Received';
+        message = `New booking from ${booking.userId?.username || 'Customer'}`;
+        type = 'booking';
+      } else if (booking.status === 'confirmed') {
+        title = 'Booking Confirmed';
+        message = `Booking confirmed for ${booking.userId?.username || 'Customer'}`;
+        type = 'booking';
+      } else if (booking.status === 'cancelled') {
+        title = 'Booking Cancelled';
+        message = `Booking cancelled by ${booking.userId?.username || 'Customer'}`;
+        type = 'cancellation';
+      }
+
+      if (booking.paymentStatus === 'paid' && booking.status === 'pending') {
+        title = 'Payment Received';
+        message = `Payment received from ${booking.userId?.username || 'Customer'}`;
+        type = 'payment';
+      }
+
+      return {
+        _id: booking._id,
+        type,
+        title,
+        message,
+        bookingId: booking._id,
+        details: {
+          customerName: booking.userId?.username || 'Unknown',
+          amount: booking.amount,
+          roomType: booking.bookingDetails?.roomType,
+          checkIn: booking.bookingDetails?.checkIn,
+          checkOut: booking.bookingDetails?.checkOut,
+        },
+        createdAt: booking.createdAt,
+      };
+    });
+
+    res.status(200).json({
+      success: true,
+      notifications,
+    });
+  } catch (error) {
+    console.error("Error fetching notifications:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch notifications",
+      error: error.message,
+    });
+  }
+};
+
+// Vehicle Management (for Cab businesses)
+const getVehicles = async (req, res) => {
+  try {
+    const { businessId } = req.params;
+    const business = await Business.findById(businessId);
+
+    if (!business) {
+      return res.status(404).json({
+        success: false,
+        message: "Business not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      vehicles: business.vehicles || [],
+    });
+  } catch (error) {
+    console.error("Get vehicles error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error occurred",
+      error: error.message,
+    });
+  }
+};
+
+const createVehicle = async (req, res) => {
+  try {
+    const businessId = req.businessId;
+    const vehicleData = req.body;
+
+    const business = await Business.findById(businessId);
+    if (!business) {
+      return res.status(404).json({
+        success: false,
+        message: "Business not found",
+      });
+    }
+
+    if (!business.vehicles) {
+      business.vehicles = [];
+    }
+
+    business.vehicles.push(vehicleData);
+    await business.save();
+
+    res.status(201).json({
+      success: true,
+      message: "Vehicle added successfully",
+      vehicle: business.vehicles[business.vehicles.length - 1],
+    });
+  } catch (error) {
+    console.error("Create vehicle error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error occurred",
+      error: error.message,
+    });
+  }
+};
+
+const updateVehicle = async (req, res) => {
+  try {
+    const { vehicleId } = req.params;
+    const businessId = req.businessId;
+    const vehicleData = req.body;
+
+    const business = await Business.findById(businessId);
+    if (!business) {
+      return res.status(404).json({
+        success: false,
+        message: "Business not found",
+      });
+    }
+
+    const vehicleIndex = business.vehicles.findIndex(
+      (v) => v._id.toString() === vehicleId
+    );
+
+    if (vehicleIndex === -1) {
+      return res.status(404).json({
+        success: false,
+        message: "Vehicle not found",
+      });
+    }
+
+    business.vehicles[vehicleIndex] = {
+      ...business.vehicles[vehicleIndex].toObject(),
+      ...vehicleData,
+      _id: business.vehicles[vehicleIndex]._id,
+    };
+
+    await business.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Vehicle updated successfully",
+      vehicle: business.vehicles[vehicleIndex],
+    });
+  } catch (error) {
+    console.error("Update vehicle error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error occurred",
+      error: error.message,
+    });
+  }
+};
+
+const deleteVehicle = async (req, res) => {
+  try {
+    const { vehicleId } = req.params;
+    const businessId = req.businessId;
+
+    const business = await Business.findById(businessId);
+    if (!business) {
+      return res.status(404).json({
+        success: false,
+        message: "Business not found",
+      });
+    }
+
+    business.vehicles = business.vehicles.filter(
+      (v) => v._id.toString() !== vehicleId
+    );
+
+    await business.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Vehicle deleted successfully",
+    });
+  } catch (error) {
+    console.error("Delete vehicle error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error occurred",
+      error: error.message,
+    });
+  }
+};
+
 export {
   registerBusiness,
   checkEmail,
   sendLoginCode,
   verifyLoginCode,
   loginBusiness,
-  quickLoginBusiness,
   getBusinessProfile,
   checkAuth,
   logoutBusiness,
@@ -1547,5 +1932,11 @@ export {
   createCategory,
   updateCategory,
   deleteCategory,
-  getAllHotels
+  getAllHotels,
+  getBusinessStats,
+  getBusinessNotifications,
+  getVehicles,
+  createVehicle,
+  updateVehicle,
+  deleteVehicle
 };

@@ -8,16 +8,17 @@ const BusinessViewTracker = ({ businessId, businessType, source = 'direct' }) =>
 
   useEffect(() => {
     const trackView = async () => {
-      if (hasTrackedRef.current) return;
+      if (hasTrackedRef.current || !businessId) return;
       
       try {
+        const token = localStorage.getItem('userToken');
         // Track initial view
-        await axios.post('/api/business-view/track', {
-          businessId,
-          businessType,
-          duration: 0,
+        await axios.post(`/api/analytics/business/${businessId}/view`, {
           source
         }, {
+          headers: {
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
+          },
           withCredentials: true
         });
         
@@ -33,13 +34,14 @@ const BusinessViewTracker = ({ businessId, businessType, source = 'direct' }) =>
     return () => {
       const duration = Math.floor((Date.now() - startTimeRef.current) / 1000);
       
-      if (duration > 5) { // Only track if user spent more than 5 seconds
-        axios.post('/api/business-view/track', {
-          businessId,
-          businessType,
-          duration,
+      if (duration > 5 && businessId) { // Only track if user spent more than 5 seconds
+        const token = localStorage.getItem('userToken');
+        axios.post(`/api/analytics/business/${businessId}/view`, {
           source
         }, {
+          headers: {
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
+          },
           withCredentials: true
         }).catch(error => {
           console.error('Error tracking view duration:', error);

@@ -5,7 +5,25 @@ const MapDirections = ({ destination, currentLocation }) => {
   const handleGetDirections = () => {
     // Format coordinates for Google Maps URL
     const origin = currentLocation ? `${currentLocation.lat},${currentLocation.lng}` : '';
-    const dest = destination?.coordinates ? `${destination.coordinates[1]},${destination.coordinates[0]}` : destination?.address;
+    
+    // Handle different destination formats
+    let dest;
+    if (destination?.location?.coordinates && destination.location.coordinates.length >= 2) {
+      // Business model format: location.coordinates [longitude, latitude]
+      dest = `${destination.location.coordinates[1]},${destination.location.coordinates[0]}`;
+    } else if (destination?.coordinates && destination.coordinates.length >= 2) {
+      // Legacy format: coordinates [longitude, latitude]
+      dest = `${destination.coordinates[1]},${destination.coordinates[0]}`;
+    } else if (destination?.address) {
+      // Fallback to address
+      dest = destination.address;
+    } else if (typeof destination === 'string') {
+      // Direct address string
+      dest = destination;
+    } else {
+      // Default fallback
+      dest = 'Unknown Location';
+    }
     
     // Create Google Maps directions URL
     const googleMapsUrl = `https://www.google.com/maps/dir/?api=1${origin ? `&origin=${origin}` : ''}${dest ? `&destination=${encodeURIComponent(dest)}` : ''}`;

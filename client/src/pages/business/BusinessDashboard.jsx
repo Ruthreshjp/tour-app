@@ -26,7 +26,6 @@ const BusinessDashboard = () => {
       return;
     }
     fetchBusinessData();
-    fetchNotifications();
   }, [navigate]);
 
   const fetchBusinessData = async () => {
@@ -47,6 +46,11 @@ const BusinessDashboard = () => {
         setBusinessData(data.business);
         // Fetch analytics after business data is loaded
         fetchAnalytics();
+        if (data.business?.businessType !== 'shopping') {
+          fetchNotifications();
+        } else {
+          setNotifications([]);
+        }
       } else {
         toast.error("Failed to fetch business data");
         if (data?.message === "Unauthorized") {
@@ -147,6 +151,8 @@ const BusinessDashboard = () => {
     };
     return icons[type] || "🏢";
   };
+
+  const isShoppingBusiness = businessData?.businessType === 'shopping';
 
   if (loading) {
     return (
@@ -298,31 +304,35 @@ const BusinessDashboard = () => {
             </div>
 
             {/* Quick Actions */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="bg-white rounded-lg shadow-md p-6 text-center hover:shadow-lg transition-shadow">
-                <div className="text-4xl mb-3">📝</div>
-                <h3 className="font-semibold text-gray-800 text-lg">Manage Listings</h3>
-                <p className="text-sm text-gray-600 mt-2">Update business information and details</p>
-                <button 
-                  onClick={() => handleNavigation('/business/listings')}
-                  className="mt-4 bg-[#EB662B] text-white px-6 py-3 rounded-md text-sm hover:bg-[#d55a24] hover:shadow-lg transform hover:scale-105 transition-all duration-200 font-medium"
-                >
-                  Manage Listings
-                </button>
-              </div>
-              
-              <div className="bg-white rounded-lg shadow-md p-6 text-center hover:shadow-lg transition-shadow">
-                <div className="text-4xl mb-3">📅</div>
-                <h3 className="font-semibold text-gray-800 text-lg">Bookings</h3>
-                <p className="text-sm text-gray-600 mt-2">View and manage customer bookings</p>
-                <button 
-                  onClick={() => handleNavigation('/business/bookings')}
-                  className="mt-4 bg-[#EB662B] text-white px-6 py-3 rounded-md text-sm hover:bg-[#d55a24] hover:shadow-lg transform hover:scale-105 transition-all duration-200 font-medium"
-                >
-                  View Bookings
-                </button>
-              </div>
-              
+            <div className={`grid grid-cols-1 ${isShoppingBusiness ? 'md:grid-cols-1' : 'md:grid-cols-3'} gap-6`}>
+              {!isShoppingBusiness && (
+                <div className="bg-white rounded-lg shadow-md p-6 text-center hover:shadow-lg transition-shadow">
+                  <div className="text-4xl mb-3">📝</div>
+                  <h3 className="font-semibold text-gray-800 text-lg">Manage Listings</h3>
+                  <p className="text-sm text-gray-600 mt-2">Update business information and details</p>
+                  <button 
+                    onClick={() => handleNavigation('/business/listings')}
+                    className="mt-4 bg-[#EB662B] text-white px-6 py-3 rounded-md text-sm hover:bg-[#d55a24] hover:shadow-lg transform hover:scale-105 transition-all duration-200 font-medium"
+                  >
+                    Manage Listings
+                  </button>
+                </div>
+              )}
+
+              {!isShoppingBusiness && (
+                <div className="bg-white rounded-lg shadow-md p-6 text-center hover:shadow-lg transition-shadow">
+                  <div className="text-4xl mb-3">📅</div>
+                  <h3 className="font-semibold text-gray-800 text-lg">Bookings</h3>
+                  <p className="text-sm text-gray-600 mt-2">View and manage customer bookings</p>
+                  <button 
+                    onClick={() => handleNavigation('/business/bookings')}
+                    className="mt-4 bg-[#EB662B] text-white px-6 py-3 rounded-md text-sm hover:bg-[#d55a24] hover:shadow-lg transform hover:scale-105 transition-all duration-200 font-medium"
+                  >
+                    View Bookings
+                  </button>
+                </div>
+              )}
+
               <div className="bg-white rounded-lg shadow-md p-6 text-center hover:shadow-lg transition-shadow">
                 <div className="text-4xl mb-3">🔧</div>
                 <h3 className="font-semibold text-gray-800 text-lg">Business Setup</h3>
@@ -337,74 +347,76 @@ const BusinessDashboard = () => {
             </div>
 
             {/* Recent Activity */}
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-xl font-semibold text-gray-800">Recent Activity</h3>
-                <button 
-                  onClick={() => handleNavigation('/business/activity')}
-                  className="text-[#EB662B] hover:text-[#d55a24] text-sm font-medium"
-                >
-                  View All →
-                </button>
-              </div>
-              
-              <div className="space-y-4">
-                {notifications.length === 0 ? (
-                  <div className="text-center py-8">
-                    <div className="text-4xl mb-2">🔔</div>
-                    <p className="text-gray-600 text-sm">No notifications yet</p>
-                    <p className="text-gray-500 text-xs mt-1">New bookings and updates will appear here</p>
-                  </div>
-                ) : (
-                  notifications.map((notification, index) => {
-                    const getIcon = (type) => {
-                      const icons = {
-                        booking: "🔔",
-                        review: "⭐",
-                        view: "👁️",
-                        payment: "💳",
-                        cancellation: "❌",
-                      };
-                      return icons[type] || "📢";
-                    };
-
-                    const formatTimeAgo = (date) => {
-                      const now = new Date();
-                      const notificationDate = new Date(date);
-                      const diffInMs = now - notificationDate;
-                      const diffInMinutes = Math.floor(diffInMs / 60000);
-                      const diffInHours = Math.floor(diffInMinutes / 60);
-                      const diffInDays = Math.floor(diffInHours / 24);
-
-                      if (diffInMinutes < 1) return "Just now";
-                      if (diffInMinutes < 60) return `${diffInMinutes} minute${diffInMinutes > 1 ? "s" : ""} ago`;
-                      if (diffInHours < 24) return `${diffInHours} hour${diffInHours > 1 ? "s" : ""} ago`;
-                      if (diffInDays < 7) return `${diffInDays} day${diffInDays > 1 ? "s" : ""} ago`;
-                      return notificationDate.toLocaleDateString();
-                    };
-
-                    return (
-                      <div key={notification._id || index} className="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                        <div className="text-2xl mr-3">{getIcon(notification.type)}</div>
-                        <div className="flex-1">
-                          <p className="text-sm font-medium text-gray-800">{notification.title}</p>
-                          <p className="text-xs text-gray-500">{formatTimeAgo(notification.createdAt)}</p>
-                        </div>
-                      </div>
-                    );
-                  })
-                )}
-                
-                <div className="text-center pt-4">
+            {!isShoppingBusiness && (
+              <div className="bg-white rounded-lg shadow-md p-6">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-xl font-semibold text-gray-800">Recent Activity</h3>
                   <button 
                     onClick={() => handleNavigation('/business/notifications')}
                     className="text-[#EB662B] hover:text-[#d55a24] text-sm font-medium"
                   >
-                    View All Notifications
+                    View All →
                   </button>
                 </div>
+                
+                <div className="space-y-4">
+                  {notifications.length === 0 ? (
+                    <div className="text-center py-8">
+                      <div className="text-4xl mb-2">🔔</div>
+                      <p className="text-gray-600 text-sm">No notifications yet</p>
+                      <p className="text-gray-500 text-xs mt-1">New bookings and updates will appear here</p>
+                    </div>
+                  ) : (
+                    notifications.map((notification, index) => {
+                      const getIcon = (type) => {
+                        const icons = {
+                          booking: "🔔",
+                          review: "⭐",
+                          view: "👁️",
+                          payment: "💳",
+                          cancellation: "❌",
+                        };
+                        return icons[type] || "📢";
+                      };
+
+                      const formatTimeAgo = (date) => {
+                        const now = new Date();
+                        const notificationDate = new Date(date);
+                        const diffInMs = now - notificationDate;
+                        const diffInMinutes = Math.floor(diffInMs / 60000);
+                        const diffInHours = Math.floor(diffInMinutes / 60);
+                        const diffInDays = Math.floor(diffInHours / 24);
+
+                        if (diffInMinutes < 1) return "Just now";
+                        if (diffInMinutes < 60) return `${diffInMinutes} minute${diffInMinutes > 1 ? "s" : ""} ago`;
+                        if (diffInHours < 24) return `${diffInHours} hour${diffInHours > 1 ? "s" : ""} ago`;
+                        if (diffInDays < 7) return `${diffInDays} day${diffInDays > 1 ? "s" : ""} ago`;
+                        return notificationDate.toLocaleDateString();
+                      };
+
+                      return (
+                        <div key={notification._id || index} className="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                          <div className="text-2xl mr-3">{getIcon(notification.type)}</div>
+                          <div className="flex-1">
+                            <p className="text-sm font-medium text-gray-800">{notification.title}</p>
+                            <p className="text-xs text-gray-500">{formatTimeAgo(notification.createdAt)}</p>
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
+                  
+                  <div className="text-center pt-4">
+                    <button 
+                      onClick={() => handleNavigation('/business/notifications')}
+                      className="text-[#EB662B] hover:text-[#d55a24] text-sm font-medium"
+                    >
+                      View All Notifications
+                    </button>
+                  </div>
+                </div>
               </div>
-            </div>
+            )}
           </div>
         ) : (
           <div className="text-center py-12">

@@ -147,9 +147,10 @@ const Booking = () => {
             contactPhone: currentUser.phone,
             contactEmail: currentUser.email,
             specialRequests: bookingData.paymentOption === 'advance' 
-              ? `Advance payment of ₹${advanceAmount} (50%). Remaining ₹${totalAmount - advanceAmount} to be paid later.`
-              : `Full payment of ₹${totalAmount} made.`,
+              ? `Advance payment of ₹${advanceAmount} (50%) submitted. Remaining ₹${totalAmount - advanceAmount} will be settled after confirmation.`
+              : `Full payment of ₹${totalAmount} submitted for confirmation.`,
             totalAmount: paymentAmount,
+            paymentAmountType: bookingData.paymentOption,
             paymentOption: bookingData.paymentOption
           }),
         }

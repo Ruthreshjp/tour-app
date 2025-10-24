@@ -428,6 +428,7 @@ const BusinessList = ({
           cafe={selectedBusiness}
           hotel={selectedBusiness}
           business={selectedBusiness}
+          source={businessType}
           isOpen={showDetails}
           onClose={() => {
             setShowDetails(false);

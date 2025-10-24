@@ -6,8 +6,6 @@ import { Navigation } from "swiper/modules";
 import "swiper/css/bundle";
 import Rating from "@mui/material/Rating";
 import { useSelector } from "react-redux";
-import RatingCard from "./RatingCard";
-import { toast } from "react-toastify";
 import MapModal from "./components/MapModal";
 import { Autoplay } from "swiper/modules";
 import { FaClock } from "react-icons/fa";
@@ -37,16 +35,6 @@ const Package = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [ratingsData, setRatingsData] = useState({
-    rating: 0,
-    review: "",
-    packageId: params?.id,
-    userRef: currentUser?._id,
-    username: currentUser?.username,
-    userProfileImg: currentUser?.avatar,
-  });
-  const [packageRatings, setPackageRatings] = useState([]);
-  const [ratingGiven, setRatingGiven] = useState(false);
 
   const getPackageData = async () => {
     try {
@@ -81,84 +69,11 @@ const Package = () => {
     }
   };
 
-  const giveRating = async () => {
-    checkRatingGiven();
-    if (ratingGiven) {
-      toast.error("You already submittd your rating!");
-      return;
-    }
-    if (ratingsData.rating === 0 && ratingsData.review === "") {
-      toast.error("Atleast 1 field is required!");
-      return;
-    }
-    if (
-      ratingsData.rating === 0 &&
-      ratingsData.review === "" &&
-      !ratingsData.userRef
-    ) {
-      toast.error("All fields are required!");
-      return;
-    }
-    try {
-      setLoading(true);
-      const res = await fetch("/api/rating/give-rating", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(ratingsData),
-      });
-      const data = await res.json();
-      if (data?.success) {
-        setLoading(false);
-        toast.success(data?.message);
-        getPackageData();
-        getRatings();
-        checkRatingGiven();
-      } else {
-        setLoading(false);
-        toast.error(data?.message || "Something went wrong!");
-      }
-    } catch (error) {
-      console.log(error);
-    }
-  };
-
-  const getRatings = async () => {
-    try {
-      const res = await fetch(`/api/rating/get-ratings/${params.id}/4`);
-      const data = await res.json();
-      if (data) {
-        setPackageRatings(data);
-      } else {
-        setPackageRatings("No ratings yet!");
-      }
-    } catch (error) {
-      console.log(error);
-    }
-  };
-
-  const checkRatingGiven = async () => {
-    try {
-      const res = await fetch(
-        `/api/rating/rating-given/${currentUser?._id}/${params?.id}`
-      );
-      const data = await res.json();
-      setRatingGiven(data?.given);
-    } catch (error) {
-      console.log(error);
-    }
-  };
-
   useEffect(() => {
     if (params.id) {
       getPackageData();
-      getRatings();
     }
-    if (currentUser) {
-      checkRatingGiven();
-    }
-  }, [params.id, currentUser]);
+  }, [params.id]);
   return (
     <div className="w-full">
       {loading && (
@@ -203,13 +118,14 @@ const Package = () => {
             )}
             {/* rating */}
             {packageData?.packageTotalRatings > 0 && (
-              <div className="flex items-center justify-center my-2">
+              <div className="flex items-center justify-center gap-2 my-2">
                 <Rating
                   value={packageData?.packageRating || 0}
                   readOnly
                   precision={0.1}
                 />
-                <p>({packageData?.packageTotalRatings})</p>
+                <span className="text-sm text-gray-600">{packageData?.packageRating?.toFixed?.(1) || packageData?.packageRating || 0}</span>
+                <span className="text-sm text-gray-500">({packageData?.packageTotalRatings})</span>
               </div>
             )}
 
@@ -297,83 +213,6 @@ const Package = () => {
         </div>
       </div>
       <hr className="border border-[#EB662B]" />
-      {/* give rating/review */}
-      <div className="w-full flex flex-col py-16 items-center">
-        {packageRatings && (
-          <>
-            <h4 className="text-xl">Rating/Reviews:</h4>
-            <div
-              className={`w-full sm:max-w-[640px] gap-2 ${
-                !currentUser || ratingGiven
-                  ? "hidden"
-                  : "flex flex-col items-center"
-              } `}
-            >
-              <Rating
-                name="simple-controlled"
-                className="w-max"
-                value={ratingsData?.rating}
-                onChange={(e, newValue) => {
-                  setRatingsData({
-                    ...ratingsData,
-                    rating: newValue,
-                  });
-                }}
-              />
-              <textarea
-                className="w-full resize-none p-3 border border-black rounded"
-                rows={3}
-                placeholder="Review"
-                value={ratingsData?.review}
-                onChange={(e) => {
-                  setRatingsData({
-                    ...ratingsData,
-                    review: e.target.value,
-                  });
-                }}
-              ></textarea>
-              <button
-                disabled={
-                  (ratingsData.rating === 0 && ratingsData.review === "") ||
-                  loading
-                }
-                type="button"
-                onClick={(e) => {
-                  e.preventDefault();
-                  giveRating();
-                }}
-                className="w-full p-2 bg-[#EB662B] text-white rounded disabled:opacity-80 hover:opacity-95"
-              >
-                {loading ? "Loading..." : "Submit"}
-              </button>
-              <hr />
-            </div>
-
-            <div className="mt-3 w-full gap-2 grid 2xl:grid-cols-6 xl:grid-cols-5 xlplus:grid-cols-4 lg:grid-cols-3 md:grid-cols-2">
-              <RatingCard packageRatings={packageRatings} />
-              {packageData.packageTotalRatings > 4 && (
-                <button
-                  onClick={() => navigate(`/package/ratings/${params?.id}`)}
-                  className="flex items-center justify-center text-lg gap-2 p-2 rounded border hover:bg-slate-500 hover:text-white"
-                >
-                  View All <FaArrowRight />
-                </button>
-              )}
-            </div>
-          </>
-        )}
-        {(!currentUser || currentUser === null) && (
-          <button
-            onClick={() => {
-              navigate("/login");
-            }}
-            className="p-2 rounded text-white bg-green-700"
-          >
-            Rate Package
-          </button>
-        )}
-      </div>
-
       {showMap && (
         <MapModal
           location={packageData.packageDestination}

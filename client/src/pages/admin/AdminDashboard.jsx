@@ -111,18 +111,11 @@ const AdminDashboard = () => {
                   className="w-37 h-37 object-cover rounded-full"
                 />
               </div>
-              <p
-                style={{
-                  width: "100%",
-                  borderBottom: "1px solid black",
-                  lineHeight: "0.1em",
-                  margin: "10px",
-                }}
-              >
-                <span className="font-semibold" style={{ background: "#fff" }}>
+              <div className="w-full text-center">
+                <span className="font-semibold text-gray-800">
                   Logged in user Information
                 </span>
-              </p>
+              </div>
               <div className="w-full flex justify-between px-1">
                 <button
                   onClick={() => setActivePanelId(10)}

@@ -3,10 +3,11 @@ import { toast } from 'react-toastify';
 import { FaQrcode, FaCopy, FaCheckCircle } from 'react-icons/fa';
 
 const PackagePayment = ({ booking, onClose, onPaymentComplete }) => {
-  const [transactionId, setTransactionId] = useState('');
+  const [transactionId, setTransactionId] = useState(booking?.transactionId || '');
   const [loading, setLoading] = useState(false);
   const [adminUPI, setAdminUPI] = useState(null);
   const [qrCodeData, setQrCodeData] = useState('');
+  const paymentType = booking?.paymentAmountType || booking?.paymentOption || 'full';
 
   useEffect(() => {
     fetchAdminUPI();
@@ -59,14 +60,14 @@ const PackagePayment = ({ booking, onClose, onPaymentComplete }) => {
         credentials: 'include',
         body: JSON.stringify({
           transactionId: transactionId.trim(),
-          paymentStatus: 'paid',
+          paymentAmountType: paymentType,
         }),
       });
 
       const data = await response.json();
 
       if (data.success) {
-        toast.success('Payment submitted successfully!');
+        toast.success('Payment submitted! Awaiting admin verification.');
         onPaymentComplete && onPaymentComplete(data.booking);
         setTimeout(() => {
           onClose();
@@ -97,7 +98,7 @@ const PackagePayment = ({ booking, onClose, onPaymentComplete }) => {
       <div className="bg-white rounded-lg p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-xl font-bold text-gray-800">Complete Payment</h3>
+          <h3 className="text-xl font-bold text-gray-800">Submit Payment Proof</h3>
           <button
             onClick={onClose}
             className="text-gray-500 hover:text-gray-700 text-2xl"
@@ -119,12 +120,16 @@ const PackagePayment = ({ booking, onClose, onPaymentComplete }) => {
               <span className="font-medium">{booking.numberOfPeople}</span>
             </div>
             <div className="flex justify-between">
-              <span>Amount to Pay:</span>
+              <span>{paymentType === 'advance' ? 'Advance Amount:' : 'Amount Paid:'}</span>
               <span className="font-bold text-green-600">₹{booking.totalAmount}</span>
             </div>
             <div className="flex justify-between">
               <span>Booking ID:</span>
               <span className="font-mono text-xs">{booking._id}</span>
+            </div>
+            <div className="flex justify-between text-xs text-gray-500">
+              <span>Payment Type:</span>
+              <span className="uppercase font-semibold">{paymentType}</span>
             </div>
           </div>
         </div>
@@ -157,7 +162,9 @@ const PackagePayment = ({ booking, onClose, onPaymentComplete }) => {
               ) : (
                 <div className="text-6xl text-blue-400 mb-2">⬜</div>
               )}
-              <p className="text-xs text-gray-500 mt-2">Scan to pay ₹{booking.totalAmount}</p>
+              <p className="text-xs text-blue-700 font-semibold">
+                Amount: ₹{booking.totalAmount}
+              </p>
             </div>
             
             <div className="text-xs text-blue-700">
@@ -202,7 +209,7 @@ const PackagePayment = ({ booking, onClose, onPaymentComplete }) => {
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
           <p className="text-xs text-gray-500 mt-1">
-            You can find this in your UPI app's transaction history
+            After submitting, the admin team will review and confirm your payment.
           </p>
         </div>
 
@@ -225,7 +232,7 @@ const PackagePayment = ({ booking, onClose, onPaymentComplete }) => {
             ) : (
               <>
                 <FaCheckCircle />
-                Confirm Payment
+                Submit for Review
               </>
             )}
           </button>

@@ -72,62 +72,123 @@ export const trackBusinessView = async (req, res) => {
 // Create rating/review
 export const createRating = async (req, res) => {
   try {
-    const { bookingId, rating, review } = req.body;
+    const { bookingId, rating, review, businessId: inputBusinessId } = req.body;
     const userId = req.user.id;
 
-    // Find booking
-    const booking = await Booking.findOne({ _id: bookingId, userId })
-      .populate('businessId', 'businessName businessType totalReviews rating');
-
-    if (!booking) {
-      return res.status(404).json({
-        success: false,
-        message: "Booking not found"
-      });
-    }
-
-    // Check if booking is completed (payment verified)
-    if (booking.status !== 'confirmed' || booking.paymentStatus !== 'paid') {
+    if (!rating || rating < 1 || rating > 5) {
       return res.status(400).json({
         success: false,
-        message: "You can only rate completed bookings"
+        message: "Rating must be between 1 and 5"
       });
     }
 
-    // Check if user already rated this booking
-    const existingRating = await Rating.findOne({ bookingId, userId });
-    if (existingRating) {
-      return res.status(400).json({
-        success: false,
-        message: "You have already rated this booking"
-      });
-    }
-
-    // Create rating
-    const newRating = new Rating({
-      businessId: booking.businessId._id,
+    let business = null;
+    let ratingData = {
       userId,
-      bookingId,
       rating: parseInt(rating),
       review: review?.trim() || ''
-    });
+    };
 
+    if (bookingId) {
+      const booking = await Booking.findOne({ _id: bookingId, userId })
+        .populate('businessId', 'businessName businessType totalReviews rating');
+
+      if (!booking) {
+        return res.status(404).json({
+          success: false,
+          message: "Booking not found"
+        });
+      }
+
+      if (booking.status !== 'confirmed' || booking.paymentStatus !== 'paid') {
+        return res.status(400).json({
+          success: false,
+          message: "You can only rate completed bookings"
+        });
+      }
+
+      const existingRating = await Rating.findOne({ bookingId, userId });
+      if (existingRating) {
+        return res.status(400).json({
+          success: false,
+          message: "You have already rated this booking"
+        });
+      }
+
+      business = booking.businessId;
+      ratingData = {
+        ...ratingData,
+        businessId: business._id,
+        bookingId,
+        businessType: booking.businessId.businessType,
+        source: 'booking',
+        isVerified: true
+      };
+    } else {
+      if (!inputBusinessId) {
+        return res.status(400).json({
+          success: false,
+          message: "businessId is required for direct ratings"
+        });
+      }
+
+      business = await Business.findById(inputBusinessId).select('businessType');
+      if (!business) {
+        return res.status(404).json({
+          success: false,
+          message: "Business not found"
+        });
+      }
+
+      const existingRating = await Rating.findOne({ businessId: inputBusinessId, userId, source: 'direct' });
+      if (existingRating) {
+        return res.status(400).json({
+          success: false,
+          message: "You have already rated this business"
+        });
+      }
+
+      ratingData = {
+        ...ratingData,
+        businessId: inputBusinessId,
+        businessType: business.businessType,
+        source: 'direct',
+        isVerified: false
+      };
+    }
+
+    const newRating = new Rating(ratingData);
     await newRating.save();
 
-    // Update business rating and review count
-    const allRatings = await Rating.find({ businessId: booking.businessId._id });
-    const totalRating = allRatings.reduce((sum, r) => sum + r.rating, 0);
-    const averageRating = totalRating / allRatings.length;
+    const aggregation = await Rating.aggregate([
+      { $match: { businessId: newRating.businessId } },
+      {
+        $group: {
+          _id: '$businessId',
+          averageRating: { $avg: '$rating' },
+          totalReviews: { $sum: 1 }
+        }
+      }
+    ]);
 
-    await Business.findByIdAndUpdate(booking.businessId._id, {
-      rating: Math.round(averageRating * 10) / 10, // Round to 1 decimal
-      totalReviews: allRatings.length
-    });
+    let summary = null;
+    if (aggregation.length > 0) {
+      const { averageRating, totalReviews } = aggregation[0];
+      await Business.findByIdAndUpdate(newRating.businessId, {
+        rating: Math.round(averageRating * 10) / 10,
+        totalReviews
+      });
+      summary = {
+        averageRating: Math.round(averageRating * 10) / 10,
+        totalReviews
+      };
+    }
 
     res.json({
       success: true,
       message: "Rating submitted successfully",
-      rating: newRating
+      rating: newRating,
+      summary
     });
   } catch (error) {
     console.error("Create rating error:", error);

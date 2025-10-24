@@ -13,6 +13,7 @@ export const createPackageBooking = async (req, res) => {
       contactPhone,
       contactEmail,
       specialRequests,
+      paymentAmountType = "full",
     } = req.body;
 
     const userId = req.user.id;
@@ -45,6 +46,7 @@ export const createPackageBooking = async (req, res) => {
       specialRequests,
       paymentStatus: "pending",
       bookingStatus: "pending",
+      paymentAmountType,
     });
 
     const populatedBooking = await PackageBooking.findById(booking._id)
@@ -70,7 +72,7 @@ export const createPackageBooking = async (req, res) => {
 export const updatePaymentStatus = async (req, res) => {
   try {
     const { bookingId } = req.params;
-    const { transactionId, paymentStatus } = req.body;
+    const { transactionId, paymentAmountType } = req.body;
 
     const booking = await PackageBooking.findById(bookingId);
     if (!booking) {
@@ -80,28 +82,94 @@ export const updatePaymentStatus = async (req, res) => {
       });
     }
 
-    // Update payment status
-    booking.paymentStatus = paymentStatus;
-    booking.transactionId = transactionId;
+    if (transactionId) {
+      booking.transactionId = transactionId;
+    }
 
-    // If payment is successful, update booking status to confirmed
-    if (paymentStatus === "paid") {
-      booking.bookingStatus = "confirmed";
+    if (paymentAmountType && ["advance", "full"].includes(paymentAmountType)) {
+      booking.paymentAmountType = paymentAmountType;
+    }
+
+    // Customer submission keeps payment pending until admin review
+    booking.paymentStatus = "pending";
+    booking.paymentReceived = false;
+    booking.paymentReviewedBy = null;
+    booking.paymentReviewedAt = null;
+
+    await booking.save();
+
+    const updatedBooking = await PackageBooking.findById(bookingId)
+      .populate("packageId")
+      .populate("userId", "username email")
+      .populate("paymentReviewedBy", "username email");
+
+    res.json({
+      success: true,
+      message: "Payment submitted for review",
+      booking: updatedBooking,
+    });
+  } catch (error) {
+    console.error("❌ Update payment status error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error occurred",
+      error: error.message,
+    });
+  }
+};
+
+export const reviewPaymentStatus = async (req, res) => {
+  try {
+    if (!req.user || !(req.user.role === "admin" || req.user.user_role === 1)) {
+      return res.status(403).json({
+        success: false,
+        message: "Admin access required",
+      });
+    }
+
+    const { bookingId } = req.params;
+    const { received, paymentAmountType } = req.body;
+
+    const booking = await PackageBooking.findById(bookingId);
+    if (!booking) {
+      return res.status(404).json({
+        success: false,
+        message: "Booking not found",
+      });
+    }
+
+    if (typeof received === "boolean") {
+      if (received) {
+        booking.paymentStatus = "paid";
+        booking.bookingStatus = "confirmed";
+        booking.paymentReceived = true;
+      } else {
+        booking.paymentStatus = "pending";
+        booking.bookingStatus = "pending";
+        booking.paymentReceived = false;
+      }
+      booking.paymentReviewedBy = req.user.id;
+      booking.paymentReviewedAt = new Date();
+    }
+
+    if (paymentAmountType && ["advance", "full"].includes(paymentAmountType)) {
+      booking.paymentAmountType = paymentAmountType;
     }
 
     await booking.save();
 
     const updatedBooking = await PackageBooking.findById(bookingId)
       .populate("packageId")
-      .populate("userId", "username email");
+      .populate("userId", "username email")
+      .populate("paymentReviewedBy", "username email");
 
     res.json({
       success: true,
-      message: "Payment status updated successfully",
+      message: "Payment review updated",
       booking: updatedBooking,
     });
   } catch (error) {
-    console.error("❌ Update payment status error:", error);
+    console.error("❌ Review payment status error:", error);
     res.status(500).json({
       success: false,
       message: "Server error occurred",

@@ -3,6 +3,7 @@ import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import Chart from "../components/Chart";
 import axios from "axios";
+import { toast } from "react-toastify";
 
 const axiosWithCredentials = axios.create({
   withCredentials: true
@@ -16,6 +17,7 @@ const AllBookings = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [reviewAction, setReviewAction] = useState(null);
 
   const getAllBookings = async () => {
     setCurrentBookings([]);
@@ -49,6 +51,31 @@ const AllBookings = () => {
       }
     } catch (error) {
       console.error('❌ Error fetching package bookings:', error);
+      toast.error(error.response?.data?.message || 'Failed to fetch package bookings');
+    }
+  };
+
+  const handlePaymentReview = async (bookingId, received, paymentAmountType) => {
+    try {
+      setReviewAction(`${bookingId}-${received}`);
+      const payload = { received };
+      if (paymentAmountType) {
+        payload.paymentAmountType = paymentAmountType;
+      }
+
+      const response = await axiosWithCredentials.patch(`/api/package-booking/admin/${bookingId}/payment`, payload);
+
+      if (response.data.success) {
+        toast.success(received ? 'Payment marked as received.' : 'Payment marked as pending.');
+        getPackageBookings();
+      } else {
+        toast.error(response.data.message || 'Failed to update payment status');
+      }
+    } catch (error) {
+      console.error('❌ Error reviewing payment:', error);
+      toast.error(error.response?.data?.message || 'Failed to update payment status');
+    } finally {
+      setReviewAction(null);
     }
   };
 
@@ -123,10 +150,10 @@ const AllBookings = () => {
                     <th className="border p-2 text-left">Travel Date</th>
                     <th className="border p-2 text-left">People</th>
                     <th className="border p-2 text-left">Amount</th>
-                    <th className="border p-2 text-left">Payment</th>
+                    <th className="border p-2 text-left">Payment Details</th>
                     <th className="border p-2 text-left">Status</th>
-                    <th className="border p-2 text-left">Transaction ID</th>
                     <th className="border p-2 text-left">Booked On</th>
+                    <th className="border p-2 text-left">Verify Payment</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -161,13 +188,36 @@ const AllBookings = () => {
                         ₹{booking.totalAmount}
                       </td>
                       <td className="border p-2">
-                        <span className={`px-2 py-1 rounded text-xs font-semibold ${
-                          booking.paymentStatus === 'paid' ? 'bg-green-200 text-green-800' : 
-                          booking.paymentStatus === 'failed' ? 'bg-red-200 text-red-800' : 
-                          'bg-yellow-200 text-yellow-800'
-                        }`}>
-                          {booking.paymentStatus.toUpperCase()}
-                        </span>
+                        <div className="space-y-1 text-xs">
+                          <div>
+                            <strong>Type:</strong> {booking.paymentAmountType ? booking.paymentAmountType.toUpperCase() : 'FULL'}
+                          </div>
+                          <div>
+                            <strong>Status:</strong>{' '}
+                            <span className={`px-2 py-1 rounded text-xs font-semibold ${
+                              booking.paymentStatus === 'paid' ? 'bg-green-200 text-green-800' : 
+                              booking.paymentStatus === 'failed' ? 'bg-red-200 text-red-800' : 
+                              booking.transactionId ? 'bg-yellow-200 text-yellow-800' : 'bg-orange-200 text-orange-800'
+                            }`}>
+                              {booking.paymentStatus === 'paid' ? 'PAID' : booking.paymentStatus === 'failed' ? 'FAILED' : booking.transactionId ? 'PENDING REVIEW' : 'PENDING'}
+                            </span>
+                          </div>
+                          {booking.transactionId && (
+                            <div>
+                              <strong>Txn Ref:</strong> {booking.transactionId}
+                            </div>
+                          )}
+                          {booking.paymentReviewedAt && (
+                            <div className="text-gray-500">
+                              <strong>Reviewed:</strong> {new Date(booking.paymentReviewedAt).toLocaleString('en-IN')}
+                            </div>
+                          )}
+                          {booking.paymentReviewedBy && (
+                            <div className="text-gray-500">
+                              <strong>Reviewer:</strong> {booking.paymentReviewedBy?.username || 'Admin'}
+                            </div>
+                          )}
+                        </div>
                       </td>
                       <td className="border p-2">
                         <span className={`px-2 py-1 rounded text-xs font-semibold ${
@@ -178,11 +228,30 @@ const AllBookings = () => {
                           {booking.bookingStatus.toUpperCase()}
                         </span>
                       </td>
-                      <td className="border p-2 text-xs font-mono">
-                        {booking.transactionId || '-'}
-                      </td>
                       <td className="border p-2 text-sm">
                         {new Date(booking.createdAt).toLocaleDateString('en-IN')}
+                      </td>
+                      <td className="border p-2">
+                        {booking.paymentStatus === 'paid' ? (
+                          <span className="text-xs font-semibold text-green-700">Payment confirmed</span>
+                        ) : (
+                          <div className="flex flex-col gap-2">
+                            <button
+                              onClick={() => handlePaymentReview(booking._id, true, booking.paymentAmountType)}
+                              disabled={reviewAction === `${booking._id}-true` || !booking.transactionId}
+                              className="px-3 py-1 text-xs rounded bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              Mark as Received
+                            </button>
+                            <button
+                              onClick={() => handlePaymentReview(booking._id, false, booking.paymentAmountType)}
+                              disabled={reviewAction === `${booking._id}-false`}
+                              className="px-3 py-1 text-xs rounded bg-yellow-500 text-white hover:bg-yellow-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              Keep Pending
+                            </button>
+                          </div>
+                        )}
                       </td>
                     </tr>
                   ))}

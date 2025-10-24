@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import axios from "axios";
+import { Rating } from "@mui/material";
 import { Image } from "../../components/Image";
 import UPIPayment from "../components/UPIPayment";
 import PackagePayment from "../components/PackagePayment";
@@ -15,6 +16,7 @@ const axiosWithCredentials = axios.create({
 
 const MyBookings = () => {
   const { currentUser } = useSelector((state) => state.user);
+  const navigate = useNavigate();
   const [currentBookings, setCurrentBookings] = useState([]);
   const [travelBookings, setTravelBookings] = useState([]);
   const [packageBookings, setPackageBookings] = useState([]);
@@ -28,6 +30,11 @@ const MyBookings = () => {
   const [activeTab, setActiveTab] = useState('all'); // all, hotel, restaurant, cafe, cab, package
   const [showRatingsModal, setShowRatingsModal] = useState(false);
   const [selectedBookingForRating, setSelectedBookingForRating] = useState(null);
+  const [showPackageRatingModal, setShowPackageRatingModal] = useState(false);
+  const [selectedPackageForRating, setSelectedPackageForRating] = useState(null);
+  const [packageRatingValue, setPackageRatingValue] = useState(0);
+  const [packageRatingReview, setPackageRatingReview] = useState('');
+  const [packageRatingSubmitting, setPackageRatingSubmitting] = useState(false);
 
   const getAllBookings = async () => {
     setCurrentBookings([]);
@@ -209,11 +216,79 @@ const MyBookings = () => {
     setShowPackagePayment(true);
   };
 
-  const handlePackagePaymentComplete = (updatedBooking) => {
-    // Refresh package bookings after payment
+  const handlePackagePaymentComplete = () => {
+    // Refresh package bookings after payment submission
     getPackageBookings();
     setShowPackagePayment(false);
     setSelectedPackageBooking(null);
+  };
+
+  const handleRatePackage = async (booking) => {
+    try {
+      if (!currentUser?._id) {
+        toast.error('Please log in to rate packages');
+        return;
+      }
+
+      if (!booking?.packageId?._id) {
+        toast.error('Package information not found for this booking');
+        return;
+      }
+
+      const response = await axiosWithCredentials.get(`/api/rating/rating-given/${currentUser._id}/${booking.packageId._id}`);
+      if (response.data?.given) {
+        toast.info('You have already rated this package.');
+        return;
+      }
+    } catch (error) {
+      console.error('❌ Error checking rating status:', error);
+      toast.error(error.response?.data?.message || 'Unable to verify rating status. Please try again.');
+      return;
+    }
+
+    setSelectedPackageForRating(booking);
+    setPackageRatingValue(0);
+    setPackageRatingReview('');
+    setShowPackageRatingModal(true);
+  };
+
+  const handleSubmitPackageRating = async () => {
+    if (!packageRatingValue || packageRatingValue < 1) {
+      toast.error('Please select a star rating before submitting.');
+      return;
+    }
+
+    if (!selectedPackageForRating?.packageId?._id) {
+      toast.error('Package information missing.');
+      return;
+    }
+
+    const payload = {
+      rating: packageRatingValue,
+      review: packageRatingReview.trim(),
+      packageId: selectedPackageForRating.packageId._id,
+      userRef: currentUser?._id,
+      username: currentUser?.username,
+      userProfileImg: currentUser?.avatar,
+    };
+
+    try {
+      setPackageRatingSubmitting(true);
+      const response = await axiosWithCredentials.post('/api/rating/give-rating', payload);
+      if (response.data?.success) {
+        toast.success('Thanks for sharing your experience!');
+        setShowPackageRatingModal(false);
+        setSelectedPackageForRating(null);
+        await getPackageBookings();
+      } else {
+        toast.error(response.data?.message || 'Failed to submit rating');
+      }
+    } catch (error) {
+      console.error('❌ Error submitting package rating:', error);
+      toast.error(error.response?.data?.message || 'Failed to submit rating');
+    } finally {
+      setPackageRatingSubmitting(false);
+    }
   };
 
   const handleRateUs = (booking) => {
@@ -455,42 +530,88 @@ const MyBookings = () => {
                   <p><strong>People:</strong> {booking.numberOfPeople}</p>
                   <p><strong>Booking Date:</strong> {new Date(booking.createdAt).toLocaleDateString('en-IN')}</p>
                 </div>
-                <div className="text-sm">
-                  <p><strong>Amount:</strong> ₹{booking.totalAmount}</p>
-                  <p className="text-sm">
-                    <strong>Payment:</strong> 
-                    <span className={`ml-1 px-2 py-1 rounded ${
-                      booking.paymentStatus === 'paid' ? 'bg-green-200 text-green-800' : 
-                      booking.paymentStatus === 'failed' ? 'bg-red-200 text-red-800' : 
-                      'bg-yellow-200 text-yellow-800'
-                    }`}>
-                      {booking.paymentStatus.toUpperCase()}
+                <div className="text-sm space-y-1">
+                  <p><strong>Amount Paid:</strong> ₹{booking.totalAmount}</p>
+                  <p><strong>Payment Type:</strong> {booking.paymentAmountType ? booking.paymentAmountType.toUpperCase() : 'FULL'}</p>
+                  <p>
+                    <strong>Payment Status:</strong>
+                    <span
+                      className={`ml-1 px-2 py-1 rounded text-xs font-semibold ${
+                        booking.paymentStatus === 'paid'
+                          ? 'bg-green-200 text-green-800'
+                          : booking.paymentStatus === 'failed'
+                            ? 'bg-red-200 text-red-800'
+                            : booking.transactionId
+                              ? 'bg-yellow-200 text-yellow-800'
+                              : 'bg-orange-200 text-orange-800'
+                      }`}
+                    >
+                      {booking.paymentStatus === 'paid'
+                        ? 'PAID'
+                        : booking.paymentStatus === 'failed'
+                          ? 'FAILED'
+                          : booking.transactionId
+                            ? 'PENDING REVIEW'
+                            : 'PENDING' }
                     </span>
                   </p>
-                  <p className="text-sm">
-                    <strong>Status:</strong> 
-                    <span className={`ml-1 px-2 py-1 rounded ${
-                      booking.bookingStatus === 'confirmed' ? 'bg-green-200 text-green-800' : 
-                      booking.bookingStatus === 'cancelled' ? 'bg-red-200 text-red-800' : 
-                      'bg-blue-200 text-blue-800'
-                    }`}>
+                  {booking.transactionId && (
+                    <p className="text-xs text-gray-600">
+                      Txn Ref: {booking.transactionId}
+                    </p>
+                  )}
+                  {booking.transactionId && booking.paymentStatus !== 'paid' && (
+                    <p className="text-xs text-yellow-700 italic">
+                      ⏳ Admin will verify this transaction and update the status soon.
+                    </p>
+                  )}
+                  <p>
+                    <strong>Status:</strong>
+                    <span
+                      className={`ml-1 px-2 py-1 rounded text-xs font-semibold ${
+                        booking.bookingStatus === 'confirmed'
+                          ? 'bg-green-200 text-green-800'
+                          : booking.bookingStatus === 'cancelled'
+                            ? 'bg-red-200 text-red-800'
+                            : 'bg-blue-200 text-blue-800'
+                      }`}
+                    >
                       {booking.bookingStatus.toUpperCase()}
                     </span>
                   </p>
                 </div>
-                <div className="flex gap-2">
-                  {booking.paymentStatus === 'pending' && (
+                <div className="flex flex-col gap-2 min-w-[160px]">
+                  {booking.packageId?.packageTotalRatings > 0 && (
+                    <div className="bg-white/80 rounded-lg p-2 shadow-sm">
+                      <p className="text-xs font-semibold text-gray-600">Latest Rating</p>
+                      <div className="flex items-center gap-2">
+                        <Rating
+                          value={booking.packageId?.packageRating || 0}
+                          precision={0.1}
+                          readOnly
+                          size="small"
+                        />
+                        <span className="text-xs text-gray-500">
+                          ({booking.packageId?.packageTotalRatings})
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                  {booking.paymentStatus !== 'paid' && (
                     <button
                       onClick={() => handlePackagePayNow(booking)}
                       className="px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700 font-semibold"
                     >
-                      💳 Pay Now
+                      💳 {booking.transactionId ? 'Resubmit Proof' : 'Pay Now'}
                     </button>
                   )}
-                  {booking.transactionId && (
-                    <p className="text-xs text-gray-600">
-                      Txn: {booking.transactionId}
-                    </p>
+                  {booking.paymentStatus === 'paid' && booking.bookingStatus === 'confirmed' && (
+                    <button
+                      onClick={() => handleRatePackage(booking)}
+                      className="px-4 py-2 rounded bg-orange-500 text-white hover:bg-orange-600 font-semibold"
+                    >
+                      ⭐ Rate Package
+                    </button>
                   )}
                 </div>
               </div>
@@ -593,6 +714,95 @@ const MyBookings = () => {
             setSelectedBooking(null);
           }}
         />
+      )}
+
+      {/* Package Payment Modal */}
+      {showPackagePayment && selectedPackageBooking && (
+        <PackagePayment
+          booking={selectedPackageBooking}
+          onPaymentComplete={handlePackagePaymentComplete}
+          onClose={() => {
+            setShowPackagePayment(false);
+            setSelectedPackageBooking(null);
+          }}
+        />
+      )}
+
+      {/* Package Rating Modal */}
+      {showPackageRatingModal && selectedPackageForRating && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-md w-full p-6 shadow-xl">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-gray-800">Rate Package</h3>
+              <button
+                onClick={() => {
+                  if (!packageRatingSubmitting) {
+                    setShowPackageRatingModal(false);
+                    setSelectedPackageForRating(null);
+                  }
+                }}
+                className="text-gray-500 hover:text-gray-700 text-xl"
+                disabled={packageRatingSubmitting}
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              <div>
+                <p className="text-sm text-gray-600">Package</p>
+                <p className="text-base font-semibold text-gray-900">
+                  {selectedPackageForRating.packageId?.packageName}
+                </p>
+              </div>
+
+              <div className="flex flex-col items-center gap-2">
+                <p className="text-sm text-gray-600">How was your experience?</p>
+                <Rating
+                  name="package-rating"
+                  value={packageRatingValue}
+                  onChange={(event, newValue) => setPackageRatingValue(newValue)}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Review (optional)
+                </label>
+                <textarea
+                  rows={3}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  placeholder="Share more about your experience"
+                  value={packageRatingReview}
+                  onChange={(e) => setPackageRatingReview(e.target.value)}
+                  disabled={packageRatingSubmitting}
+                />
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    if (!packageRatingSubmitting) {
+                      setShowPackageRatingModal(false);
+                      setSelectedPackageForRating(null);
+                    }
+                  }}
+                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+                  disabled={packageRatingSubmitting}
+                >
+                  Back
+                </button>
+                <button
+                  onClick={handleSubmitPackageRating}
+                  className="flex-1 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={packageRatingSubmitting}
+                >
+                  {packageRatingSubmitting ? 'Submitting...' : 'Submit'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Ratings Modal */}

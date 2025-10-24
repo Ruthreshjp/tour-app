@@ -20,31 +20,31 @@ const TravelOwn = () => {
               to="/travel-own/hotels"
               className="block px-4 py-2 text-gray-700 hover:bg-orange-100 rounded-md transition-all"
             >
-              Hotels
+              🏨 Hotels
             </Link>
             <Link
               to="/travel-own/restaurants"
               className="block px-4 py-2 text-gray-700 hover:bg-orange-100 rounded-md transition-all"
             >
-              Restaurants
+              🍽️ Restaurants
             </Link>
             <Link
               to="/travel-own/shopping"
               className="block px-4 py-2 text-gray-700 hover:bg-orange-100 rounded-md transition-all"
             >
-              Shopping
+              🛍️ Shopping
             </Link>
             <Link
               to="/travel-own/cab"
               className="block px-4 py-2 text-gray-700 hover:bg-orange-100 rounded-md transition-all"
             >
-              Cab Services
+              🚗 Cab Services
             </Link>
             <Link
               to="/travel-own/cafe"
               className="block px-4 py-2 text-gray-700 hover:bg-orange-100 rounded-md transition-all"
             >
-              Cafes
+              ☕ Cafes
             </Link>
           </nav>
         </div>

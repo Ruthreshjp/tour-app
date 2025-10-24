@@ -34,8 +34,26 @@ const packageBookingSchema = new mongoose.Schema(
       enum: ["pending", "paid", "failed"],
       default: "pending",
     },
+    paymentAmountType: {
+      type: String,
+      enum: ["advance", "full"],
+      default: "full",
+    },
     transactionId: {
       type: String,
+      default: null,
+    },
+    paymentReceived: {
+      type: Boolean,
+      default: false,
+    },
+    paymentReviewedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
+    paymentReviewedAt: {
+      type: Date,
       default: null,
     },
     bookingStatus: {

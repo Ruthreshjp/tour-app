@@ -15,6 +15,7 @@ import businessViewRoute from "./routes/businessView.route.js";
 import businessRatingRoute from "./routes/businessRating.route.js";
 import businessInventoryRoute from "./routes/businessInventory.route.js";
 import businessViewTrackingRoute from "./routes/businessViewTracking.route.js";
+import analyticsRoute from "./routes/analytics.routes.js";
 import geocodeRoute from "./routes/geocode.route.js";
 import dotenv from "dotenv";
 import path from "path";
@@ -223,6 +224,7 @@ app.use("/api/business/views", businessViewRoute);
 app.use("/api/business/ratings", businessRatingRoute);
 app.use("/api/business/inventory", businessInventoryRoute);
 app.use("/api/business/analytics", businessViewTrackingRoute);
+app.use("/api/analytics", analyticsRoute);
 app.use("/api/geocode", geocodeRoute);
 
 // Test route

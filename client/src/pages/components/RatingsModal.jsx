@@ -3,7 +3,7 @@ import { FaStar, FaTimes } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import axios from 'axios';
 
-const RatingsModal = ({ isOpen, onClose, booking, onRatingSubmitted }) => {
+const RatingsModal = ({ isOpen, onClose, booking, business, onRatingSubmitted }) => {
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
   const [review, setReview] = useState('');
@@ -20,15 +20,28 @@ const RatingsModal = ({ isOpen, onClose, booking, onRatingSubmitted }) => {
     try {
       setLoading(true);
 
-      const response = await axios.post('/api/analytics/rating', {
-        bookingId: booking._id,
+      const payload = {
         rating,
         review: review.trim()
-      });
+      };
+
+      if (booking?._id) {
+        payload.bookingId = booking._id;
+      } else {
+        const businessId = business?._id || business?.id || business?.businessId;
+        if (!businessId) {
+          toast.error('Invalid business information for rating');
+          setLoading(false);
+          return;
+        }
+        payload.businessId = businessId;
+      }
+
+      const response = await axios.post('/api/analytics/rating', payload);
 
       if (response.data.success) {
         toast.success('Thank you for your feedback!');
-        onRatingSubmitted && onRatingSubmitted(response.data.rating);
+        onRatingSubmitted && onRatingSubmitted(response.data);
         onClose();
       } else {
         throw new Error(response.data.message || 'Failed to submit rating');
@@ -72,19 +85,31 @@ const RatingsModal = ({ isOpen, onClose, booking, onRatingSubmitted }) => {
         {/* Content */}
         <div className="p-6">
           {/* Business Info */}
-          <div className="bg-gray-50 rounded-lg p-4 mb-6">
-            <h4 className="font-medium text-gray-900 mb-2">{booking.businessId?.businessName}</h4>
-            <p className="text-sm text-gray-600">
-              {booking.businessType === 'hotel' && 'Hotel Stay'}
-              {booking.businessType === 'restaurant' && 'Restaurant Visit'}
-              {booking.businessType === 'cafe' && 'Cafe Visit'}
-              {booking.businessType === 'cab' && 'Cab Service'}
-              {booking.businessType === 'shopping' && 'Shopping Experience'}
-            </p>
-            <p className="text-xs text-gray-500 mt-1">
-              Booked on {new Date(booking.createdAt).toLocaleDateString()}
-            </p>
-          </div>
+          {(booking || business) && (
+            <div className="bg-gray-50 rounded-lg p-4 mb-6">
+              <h4 className="font-medium text-gray-900 mb-2">
+                {booking?.businessId?.businessName || booking?.businessName || business?.businessName || business?.name}
+              </h4>
+              {booking ? (
+                <>
+                  <p className="text-sm text-gray-600">
+                    {booking.businessType === 'hotel' && 'Hotel Stay'}
+                    {booking.businessType === 'restaurant' && 'Restaurant Visit'}
+                    {booking.businessType === 'cafe' && 'Cafe Visit'}
+                    {booking.businessType === 'cab' && 'Cab Service'}
+                    {booking.businessType === 'shopping' && 'Shopping Experience'}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Booked on {new Date(booking.createdAt).toLocaleDateString()}
+                  </p>
+                </>
+              ) : (
+                <p className="text-sm text-gray-600">
+                  Share your experience with this business
+                </p>
+              )}
+            </div>
+          )}
 
           <form onSubmit={handleSubmit}>
             {/* Rating Stars */}

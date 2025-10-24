@@ -2,6 +2,7 @@ import express from "express";
 import {
   createPackageBooking,
   updatePaymentStatus,
+  reviewPaymentStatus,
   getUserBookings,
   getAllBookings,
   getAdminUPI,
@@ -12,6 +13,7 @@ const router = express.Router();
 
 // User routes
 router.post("/create", verifyToken, createPackageBooking);
+router.patch("/admin/:bookingId/payment", verifyToken, isAdmin, reviewPaymentStatus);
 router.patch("/:bookingId/payment", verifyToken, updatePaymentStatus);
 router.get("/user", verifyToken, getUserBookings);
 

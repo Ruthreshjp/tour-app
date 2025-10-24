@@ -1,6 +1,7 @@
 import React from 'react';
 import { FaShoppingBag, FaClock, FaCreditCard } from 'react-icons/fa';
 import BusinessList from '../components/BusinessList';
+import ShoppingDetailsModal from '../components/ShoppingDetailsModal';
 
 const Shopping = () => {
   // Function to render shopping-specific information
@@ -28,6 +29,8 @@ const Shopping = () => {
         title="Nearby Shopping"
         renderAdditionalInfo={renderShoppingInfo}
         searchPlaceholder="Search shopping centers by name, type..."
+        DetailsModal={ShoppingDetailsModal}
+        hideMaps={false}
       />
     </div>
   );

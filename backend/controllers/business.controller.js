@@ -215,6 +215,29 @@ const registerBusiness = async (req, res) => {
   }
 };
 
+const getTablesPublic = async (req, res) => {
+  try {
+    const { businessId } = req.params;
+    const business = await Business.findById(businessId).select("tables");
+    if (!business) {
+      return res.status(404).json({
+        success: false,
+        message: "Business not found",
+      });
+    }
+    res.json({
+      success: true,
+      tables: business.tables || [],
+    });
+  } catch (error) {
+    console.error("Get tables public error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error occurred",
+    });
+  }
+};
+
 // Check if email exists and is approved
 const checkEmail = async (req, res) => {
   try {
@@ -1917,6 +1940,7 @@ export {
   toggleRoomAvailability,
   deleteRoom,
   getTables,
+  getTablesPublic,
   createTable,
   updateTable,
   deleteTable,

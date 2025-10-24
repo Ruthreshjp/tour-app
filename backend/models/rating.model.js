@@ -15,7 +15,7 @@ const ratingSchema = new mongoose.Schema(
     bookingId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Booking',
-      required: true
+      default: null
     },
     rating: {
       type: Number,
@@ -31,6 +31,16 @@ const ratingSchema = new mongoose.Schema(
     isVerified: {
       type: Boolean,
       default: true // All ratings from completed bookings are verified
+    },
+    businessType: {
+      type: String,
+      enum: ['hotel', 'restaurant', 'cafe', 'cab', 'shopping'],
+      default: null
+    },
+    source: {
+      type: String,
+      enum: ['booking', 'direct'],
+      default: 'booking'
     }
   },
   {

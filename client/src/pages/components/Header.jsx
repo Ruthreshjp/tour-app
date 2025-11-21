@@ -194,7 +194,7 @@ const Header = () => {
                   </li>
                   <li className={linkClass("/search")}>
                     <Link to="/search" onClick={handleLinkClick}>
-                      Bookings
+                      Packages
                     </Link>
                   </li>
                   <li className={linkClass("/about")}>

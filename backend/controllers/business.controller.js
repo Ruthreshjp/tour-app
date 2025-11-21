@@ -361,7 +361,7 @@ const sendLoginCode = async (req, res) => {
       </div>
     `;
 
-    await sendEmail(email, "Your Permanent Login Code - Travel-Zone Business", emailHtml);
+    await sendEmail(email, "Your Login Code - Travel-Zone Business", emailHtml);
 
     res.json({
       success: true,
@@ -449,7 +449,7 @@ const verifyLoginCode = async (req, res) => {
       );
       console.log(`✅ Temporary login code cleared for: ${business.email}`);
     } else {
-      console.log("🔒 Keeping permanent login code for approved business");
+      console.log("🔒 Keeping login code for approved business");
     }
 
     res.json({
@@ -789,8 +789,8 @@ const updateBusinessStatus = async (req, res) => {
           <div style="background-color: #e8f5e8; padding: 20px; border-radius: 8px; margin: 20px 0; text-align: center;">
             <h3 style="color: #2d5a2d; margin-top: 0;">Your Login Credentials</h3>
             <p><strong>Email:</strong> ${business.email}</p>
-            <p><strong>Permanent Login Code:</strong> <span style="font-size: 24px; font-weight: bold; color: #EB662B; background: white; padding: 8px 16px; border-radius: 4px; display: inline-block;">${business.loginCode}</span></p>
-            <p style="color: #666; font-size: 14px;">This is your permanent login code - keep it safe!</p>
+            <p><strong>Login Code:</strong> <span style="font-size: 24px; font-weight: bold; color: #EB662B; background: white; padding: 8px 16px; border-radius: 4px; display: inline-block;">${business.loginCode}</span></p>
+            <p style="color: #666; font-size: 14px;">This is your login code - keep it safe!</p>
           </div>
 
           <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0;">
@@ -819,7 +819,7 @@ const updateBusinessStatus = async (req, res) => {
           </div>
 
           <p style="color: #666; font-size: 14px;">
-            <strong>Important:</strong> This is your <strong>permanent login code</strong>. Keep it secure and use it for all future logins along with your password.
+            <strong>Important:</strong> This is your <strong>Login code</strong>. Keep it secure and use it for all future logins along with your password.
           </p>
           
           <p>Welcome to the Travel-Zone business community!</p>

@@ -246,7 +246,7 @@ const BusinessLogin = () => {
             <div className="mb-6">
               <h2 className="text-xl font-semibold text-gray-800 mb-2">Enter Login Code</h2>
               <p className="text-gray-600 text-sm mb-2">
-                Enter the permanent login code provided by admin when your business was approved.
+                Enter the login code provided by admin if your business was approved.
               </p>
               <div className="bg-blue-50 border-l-4 border-blue-400 p-3 rounded">
                 <p className="text-blue-700 text-xs">

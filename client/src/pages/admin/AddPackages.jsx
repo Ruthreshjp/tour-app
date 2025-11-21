@@ -201,8 +201,8 @@ const AddPackages = () => {
                 <option value="">Select</option>
                 <option value="Flight">Flight</option>
                 <option value="Train">Train</option>
-                <option value="Boat">Boat</option>
-                <option value="Other">Other</option>
+                <option value="Ship">Ship</option>
+                <option value="Traveler">Traveler</option>
               </select>
             </div>
             <div className="flex flex-col">

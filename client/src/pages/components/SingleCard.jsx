@@ -41,7 +41,7 @@ const SingleCard = ({ packageData }) => {
         <img
           src={imageUrl}
           alt={packageData?.packageName || "Travel Package"}
-          className="w-full h-[140px] object-cover"
+          className="w-[95%] h-[140px] object-cover mx-auto rounded-md"
           onError={(e) => (e.target.src = defaultPlaceholder)} // Fallback on error
         />
       </Link>

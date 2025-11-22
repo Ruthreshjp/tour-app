@@ -110,11 +110,11 @@ const Booking = () => {
                 Trip To Goa
               </h1>
               <div className="flex items-center justify-around gap-3 text-sm text-gray-600">
-                <p>30 September</p> |<p>Trip to Goa</p>
+                <p>30 December</p> |<p>Trip to Goa</p>
               </div>
               <div className="flex items-center justify-around gap-5 my-3 text-sm text-gray-700 font-medium">
                 <p>24 people going</p>
-                <p>Rs. 2,500</p>
+                <p>Rs. 9000</p>
               </div>
             </div>
           </motion.div>

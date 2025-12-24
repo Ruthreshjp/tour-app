@@ -17,19 +17,19 @@ const getImageUrl = (url) => {
 
   // Handle MongoDB image URLs (ObjectId format)
   if (url.match(/^[0-9a-fA-F]{24}$/)) {
-    const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+    const baseUrl = import.meta.env.VITE_API_URL || 'https://travelzone.onrender.com';
     return `${baseUrl}/api/images/${url}`;
   }
 
   // Handle API image URLs
   if (url.startsWith('/api/images/')) {
-    const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+    const baseUrl = import.meta.env.VITE_API_URL || 'https://travelzone.onrender.com';
     return `${baseUrl}${url}`;
   }
 
   // Handle uploads folder URLs
   if (url.startsWith('/uploads/')) {
-    const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+    const baseUrl = import.meta.env.VITE_API_URL || 'https://travelzone.onrender.com';
     return `${baseUrl}${url}`;
   }
 
@@ -45,12 +45,12 @@ const getImageUrl = (url) => {
 
   // Handle all other relative paths (serve from backend)
   if (url.startsWith('/')) {
-    const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+    const baseUrl = import.meta.env.VITE_API_URL || 'https://travelzone.onrender.com';
     return `${baseUrl}${url}`;
   }
 
   // If it's just a filename or relative path, try to serve from backend
-  const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+  const baseUrl = import.meta.env.VITE_API_URL || 'https://travelzone.onrender.com';
   return `${baseUrl}/api/images/${url}`;
 };
 

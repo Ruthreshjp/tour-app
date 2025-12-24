@@ -1,8 +1,9 @@
 import axios from 'axios';
 
 // Create axios instance with default config
+const normalizedBaseUrl = (import.meta.env.VITE_API_URL || 'https://travelzone.onrender.com').replace(/\/+$/, '');
 const api = axios.create({
-  baseURL: 'http://localhost:8000/api',
+  baseURL: `${normalizedBaseUrl}/api`,
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json'

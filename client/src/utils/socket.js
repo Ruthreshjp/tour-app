@@ -3,7 +3,9 @@ import { io } from 'socket.io-client';
 let socket;
 
 export const initSocket = () => {
-  socket = io('http://localhost:8000', {
+  const baseUrl = (import.meta.env.VITE_API_URL || 'https://travelzone.onrender.com').replace(/\/+$/, '');
+
+  socket = io(baseUrl, {
     withCredentials: true,
   });
 

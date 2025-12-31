@@ -4,6 +4,7 @@ import { useSelector } from "react-redux";
 import { useNavigate, useParams } from "react-router";
 import axios from "axios";
 import { toast } from "react-toastify";
+import { API_BASE } from "../../utils/apiBase";
 import Map from "../components/Map";
 import StripePayment from "../components/StripePayment";
 import PackagePayment from "../components/PackagePayment";
@@ -55,7 +56,7 @@ const Booking = () => {
     try {
       setLoading(true);
       const res = await fetch(
-        `/api/package/get-package-data/${params?.id}`
+        `${API_BASE}/api/package/get-package-data/${params?.id}`
       );
       const data = await res.json();
       if (data?.success) {
@@ -89,7 +90,7 @@ const Booking = () => {
   //get paymentgateway token
   const getToken = async () => {
     try {
-      const { data } = await axios.get(`/api/package/braintree/token`);
+      const { data } = await axios.get(`${API_BASE}/api/package/braintree/token`);
       setClientToken(data?.clientToken);
     } catch (error) {
       console.log(error);
@@ -132,7 +133,7 @@ const Booking = () => {
       const paymentAmount = bookingData.paymentOption === 'advance' ? advanceAmount : totalAmount;
 
       const res = await fetch(
-        `/api/package-booking/create`,
+        `${API_BASE}/api/package-booking/create`,
         {
           method: "POST",
           headers: {

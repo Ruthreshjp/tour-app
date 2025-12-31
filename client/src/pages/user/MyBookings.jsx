@@ -8,9 +8,11 @@ import { Image } from "../../components/Image";
 import UPIPayment from "../components/UPIPayment";
 import PackagePayment from "../components/PackagePayment";
 import RatingsModal from "../../pages/components/RatingsModal";
+import { API_BASE } from "../../utils/apiBase";
 
 // Configure axios with credentials
 const axiosWithCredentials = axios.create({
+  baseURL: `${API_BASE}/api`,
   withCredentials: true
 });
 
@@ -41,7 +43,7 @@ const MyBookings = () => {
     try {
       setLoading(true);
       const res = await fetch(
-        `/api/booking/get-UserCurrentBookings/${currentUser?._id}?searchTerm=${searchTerm}`
+        `${API_BASE}/api/booking/get-UserCurrentBookings/${currentUser?._id}?searchTerm=${searchTerm}`
       );
       const data = await res.json();
       if (data?.success) {
@@ -118,7 +120,7 @@ const MyBookings = () => {
   const getPackageBookings = async () => {
     try {
       console.log('📦 Fetching package bookings...');
-      const response = await axiosWithCredentials.get('/api/package-booking/user');
+      const response = await axiosWithCredentials.get('/package-booking/user');
       console.log('✅ Package bookings response:', response.data);
       if (response.data.success) {
         // Show all bookings that are not cancelled or completed
@@ -142,7 +144,7 @@ const MyBookings = () => {
     try {
       setLoading(true);
       const res = await fetch(
-        `/api/booking/cancel-booking/${id}/${currentUser._id}`,
+        `${API_BASE}/api/booking/cancel-booking/${id}/${currentUser._id}`,
         {
           method: "POST",
         }
@@ -177,7 +179,7 @@ const MyBookings = () => {
     
     try {
       setLoading(true);
-      const response = await axiosWithCredentials.patch(`/api/booking/${bookingId}/cancel`);
+      const response = await axiosWithCredentials.patch(`/booking/${bookingId}/cancel`);
       
       if (response.data.success) {
         toast.success('✅ Booking cancelled successfully. No refund will be processed.');
@@ -235,7 +237,7 @@ const MyBookings = () => {
         return;
       }
 
-      const response = await axiosWithCredentials.get(`/api/rating/rating-given/${currentUser._id}/${booking.packageId._id}`);
+      const response = await axiosWithCredentials.get(`/rating/rating-given/${currentUser._id}/${booking.packageId._id}`);
       if (response.data?.given) {
         toast.info('You have already rated this package.');
         return;
@@ -274,7 +276,7 @@ const MyBookings = () => {
 
     try {
       setPackageRatingSubmitting(true);
-      const response = await axiosWithCredentials.post('/api/rating/give-rating', payload);
+      const response = await axiosWithCredentials.post('/rating/give-rating', payload);
       if (response.data?.success) {
         toast.success('Thanks for sharing your experience!');
         setShowPackageRatingModal(false);

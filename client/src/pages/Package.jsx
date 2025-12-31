@@ -8,6 +8,7 @@ import Rating from "@mui/material/Rating";
 import { useSelector } from "react-redux";
 import MapModal from "./components/MapModal";
 import { Autoplay } from "swiper/modules";
+import { API_BASE } from "../utils/apiBase";
 import { FaClock } from "react-icons/fa";
 const Package = () => {
   const [showMap, setShowMap] = useState(false);
@@ -39,7 +40,7 @@ const Package = () => {
   const getPackageData = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`/api/package/get-package-data/${params?.id}`);
+      const res = await fetch(`${API_BASE}/api/package/get-package-data/${params?.id}`);
       const data = await res.json();
       if (data?.success) {
         setPackageData({

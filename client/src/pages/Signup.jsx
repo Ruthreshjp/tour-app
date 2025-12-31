@@ -4,6 +4,7 @@ import axios from "axios";
 // Using public directory path instead of asset import
 import { toast } from "react-toastify";
 import { Image } from '../components/Image';
+import { API_BASE } from "../utils/apiBase";
 const Signup = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
@@ -74,7 +75,7 @@ const Signup = () => {
     }
 
     try {
-      const res = await fetch('/api/auth/signup', {
+      const res = await fetch(`${API_BASE}/api/auth/signup`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

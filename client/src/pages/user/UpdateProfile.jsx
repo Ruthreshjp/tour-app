@@ -11,6 +11,7 @@ import {
 import { toast } from "react-toastify";
 import axios from "axios";
 import { FiUpload } from "react-icons/fi";
+import { API_BASE } from "../../utils/apiBase";
 
 const UpdateProfile = () => {
   const { currentUser, loading, error } = useSelector((state) => state.user);
@@ -95,7 +96,7 @@ const UpdateProfile = () => {
       }
 
       const res = await axios.post(
-        `/api/user/update/${currentUser._id}`,
+        `${API_BASE}/api/user/update/${currentUser._id}`,
         updatedForm
       );
 
@@ -129,7 +130,7 @@ const UpdateProfile = () => {
     }
     try {
       dispatch(updatePassStart());
-      const res = await fetch(`/api/user/update-password/${currentUser._id}`, {
+      const res = await fetch(`${API_BASE}/api/user/update-password/${currentUser._id}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

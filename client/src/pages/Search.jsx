@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import SingleCard from "./components/SingleCard";
+import { API_BASE } from "../utils/apiBase";
 
 const Search = () => {
   const navigate = useNavigate();
@@ -35,7 +36,7 @@ const Search = () => {
       setShowMoreBtn(false);
       try {
         const searchQuery = urlParams.toString();
-        const res = await fetch(`/api/package/get-packages?${searchQuery}`);
+        const res = await fetch(`${API_BASE}/api/package/get-packages?${searchQuery}`);
         const data = await res.json();
         setLoading(false);
         setAllPackages(data?.packages);
@@ -89,7 +90,7 @@ const Search = () => {
     const urlParams = new URLSearchParams(location.search);
     urlParams.set("startIndex", startIndex);
     const searchQuery = urlParams.toString();
-    const res = await fetch(`/api/package/get-packages?${searchQuery}`);
+    const res = await fetch(`${API_BASE}/api/package/get-packages?${searchQuery}`);
     const data = await res.json();
     if (data?.packages?.length < 9) {
       setShowMoreBtn(false);

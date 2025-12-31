@@ -3,6 +3,7 @@ import { useOutletContext } from 'react-router-dom';
 import { FaMapMarkerAlt, FaPhone, FaStar, FaDirections, FaBed, FaWifi, FaSwimmingPool, FaCheckCircle } from 'react-icons/fa';
 import axios from 'axios';
 import { toast } from 'react-toastify';
+import { API_BASE } from '../../utils/apiBase';
 import BusinessMap from '../components/BusinessMap';
 import MapDirections from '../components/MapDirections';
 import HotelBooking from '../components/HotelBooking';
@@ -40,7 +41,7 @@ const Hotels = () => {
       try {
         if (searchMode === 'location' && locationSearch.trim()) {
           // Search by location name
-          response = await axios.get('/api/location/search', {
+          response = await axios.get(`${API_BASE}/api/location/search`, {
             params: { 
               location: locationSearch.trim(), 
               type: 'hotel',
@@ -49,7 +50,7 @@ const Hotels = () => {
           });
         } else if (globalQuery && globalQuery.trim().length > 0) {
           // Use global query as location search
-          response = await axios.get('/api/location/search', {
+          response = await axios.get(`${API_BASE}/api/location/search`, {
             params: { 
               location: globalQuery.trim(), 
               type: 'hotel',
@@ -63,7 +64,7 @@ const Hotels = () => {
           });
           setCurrentLocation({ lat: position.coords.latitude, lng: position.coords.longitude });
           
-          response = await axios.get('/api/location/nearby', { 
+          response = await axios.get(`${API_BASE}/api/location/nearby`, { 
             params: {
               lat: position.coords.latitude,
               lng: position.coords.longitude,
@@ -74,7 +75,7 @@ const Hotels = () => {
           });
         } else {
           // Default: Get all hotels without location filter
-          response = await axios.get('/api/location/search', {
+          response = await axios.get(`${API_BASE}/api/location/search`, {
             params: { 
               type: 'hotel',
               status: 'approved'
@@ -84,7 +85,7 @@ const Hotels = () => {
       } catch (apiError) {
         console.error('Primary API call failed, trying direct business API:', apiError);
         // Fallback: try to get all businesses directly
-        response = await axios.get('/api/business/all', {
+        response = await axios.get(`${API_BASE}/api/business/all`, {
           params: { type: 'hotel' }
         });
       }

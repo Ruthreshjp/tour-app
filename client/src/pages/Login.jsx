@@ -6,6 +6,7 @@ import { loginStart, loginSuccess, loginFailure, clearLoading } from "../redux/u
 import { useDispatch, useSelector } from "react-redux";
 // Using public directory path instead of asset import
 import { Image } from '../components/Image';
+import { API_BASE } from "../utils/apiBase";
 
 const Login = () => {
   const dispatch = useDispatch();
@@ -41,7 +42,7 @@ const Login = () => {
       localStorage.removeItem("businessToken");
       localStorage.removeItem("businessData");
       
-      const res = await fetch("/api/auth/login", {
+      const res = await fetch(`${API_BASE}/api/auth/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

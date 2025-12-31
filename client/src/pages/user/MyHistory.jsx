@@ -4,9 +4,11 @@ import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import axios from "axios";
 import { Image } from "../../components/Image";
+import { API_BASE } from "../../utils/apiBase";
 
 // Configure axios with credentials
 const axiosWithCredentials = axios.create({
+  baseURL: `${API_BASE}/api`,
   withCredentials: true
 });
 
@@ -22,7 +24,7 @@ const MyHistory = () => {
     try {
       setLoading(true);
       const res = await fetch(
-        `/api/booking/get-allUserBookings/${currentUser?._id}?searchTerm=${search}`
+        `${API_BASE}/api/booking/get-allUserBookings/${currentUser?._id}?searchTerm=${search}`
       );
       const data = await res.json();
       if (data?.success) {
@@ -41,7 +43,7 @@ const MyHistory = () => {
   const getTravelHistory = async () => {
     try {
       console.log('📜 Fetching travel history...');
-      const response = await axiosWithCredentials.get('/api/booking/user');
+      const response = await axiosWithCredentials.get('/booking/user');
       console.log('✅ Travel history response:', response.data);
       if (response.data.success) {
         const today = new Date();
@@ -83,7 +85,7 @@ const MyHistory = () => {
     try {
       setLoading(true);
       const res = await fetch(
-        `/api/booking/delete-booking-history/${id}/${currentUser._id}`,
+        `${API_BASE}/api/booking/delete-booking-history/${id}/${currentUser._id}`,
         {
           method: "DELETE",
         }

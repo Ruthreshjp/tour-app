@@ -2,6 +2,7 @@ import { Rating } from "@mui/material";
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import RatingCard from "./RatingCard";
+import { API_BASE } from "../utils/apiBase";
 
 const RatingsPage = () => {
   const params = useParams();
@@ -15,9 +16,9 @@ const RatingsPage = () => {
     try {
       setLoading(true);
       const res = await fetch(
-        `/api/rating/get-ratings/${params.id}/999999999999`
+        `${API_BASE}/api/rating/get-ratings/${params.id}/999999999999`
       );
-      const res2 = await fetch(`/api/rating/average-rating/${params.id}`);
+      const res2 = await fetch(`${API_BASE}/api/rating/average-rating/${params.id}`);
       const data = await res.json();
       const data2 = await res2.json();
       if (data && data2) {

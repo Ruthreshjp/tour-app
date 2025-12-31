@@ -12,6 +12,7 @@ import Offers from "./components/Offers";
 import SingleCard from "./components/SingleCard";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
+import { API_BASE } from "../utils/apiBase";
 
 const Home = () => {
   const navigate = useNavigate();
@@ -25,7 +26,7 @@ const Home = () => {
     try {
       setLoading(true);
       const res = await fetch(
-        "/api/package/get-packages?sort=packageRating&limit=8"
+        `${API_BASE}/api/package/get-packages?sort=packageRating&limit=8`
       );
       const data = await res.json();
       if (data?.success) {
@@ -44,7 +45,7 @@ const Home = () => {
     try {
       setLoading(true);
       const res = await fetch(
-        "/api/package/get-packages?sort=createdAt&limit=8"
+        `${API_BASE}/api/package/get-packages?sort=createdAt&limit=8`
       );
       const data = await res.json();
       if (data?.success) {
@@ -63,7 +64,7 @@ const Home = () => {
     try {
       setLoading(true);
       const res = await fetch(
-        "/api/package/get-packages?sort=createdAt&offer=true&limit=6"
+        `${API_BASE}/api/package/get-packages?sort=createdAt&offer=true&limit=6`
       );
       const data = await res.json();
       if (data?.success) {

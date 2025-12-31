@@ -86,12 +86,23 @@ export const loginController = async (req, res) => {
       { expiresIn: "4d" }
     );
     const { password: pass, ...rest } = validUser._doc;
+    
+    // Set cookie with proper CORS settings
+    const cookieOptions = {
+      httpOnly: true,
+      maxAge: 4 * 24 * 60 * 60 * 1000, // 4 days
+    };
+    
+    if (process.env.NODE_ENV === "production") {
+      cookieOptions.secure = true;
+      cookieOptions.sameSite = "none"; // Required for cross-origin cookies
+    } else {
+      cookieOptions.secure = false;
+      cookieOptions.sameSite = "lax";
+    }
+    
     res
-      .cookie("X_TTMS_access_token", token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        maxAge: 4 * 24 * 60 * 60 * 1000,
-      })
+      .cookie("X_TTMS_access_token", token, cookieOptions)
       .status(200)
       .send({
         success: true,
@@ -111,11 +122,22 @@ export const loginController = async (req, res) => {
 // Logout controller
 export const logOutController = (req, res) => {
   try {
-    res.clearCookie("X_TTMS_access_token");
-    res.status(200).send({
-      success: true,
-      message: "Logged out successfully",
-    });
+    const cookieOptions = {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+    };
+    
+    if (process.env.NODE_ENV === "production") {
+      cookieOptions.sameSite = "none";
+    }
+    
+    res
+      .clearCookie("X_TTMS_access_token", cookieOptions)
+      .status(200)
+      .send({
+        success: true,
+        message: "Logged out successfully",
+      });
   } catch (error) {
     console.error("Logout error:", error);
     return res.status(500).send({

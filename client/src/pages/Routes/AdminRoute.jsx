@@ -10,7 +10,10 @@ export default function AdminRoute() {
 
   const authCheck = async () => {
     try {
-      console.log('👮 AdminRoute: Checking admin auth...');
+      console.log('👮 AdminRoute: Starting admin auth check...');
+      console.log('👮 AdminRoute: currentUser from Redux:', currentUser);
+      console.log('👮 AdminRoute: API_BASE:', API_BASE);
+      
       const res = await fetch(`${API_BASE}/api/user/admin-auth`, {
         method: "GET",
         headers: {
@@ -19,35 +22,44 @@ export default function AdminRoute() {
         },
         credentials: "include",
       });
+      
+      console.log('👮 AdminRoute: Response status:', res.status);
       const data = await res.json();
       console.log('👮 AdminRoute auth response:', data);
+      
       if (data?.check === true) {
         console.log('✅ AdminRoute: Auth check PASSED');
         setOk(true);
       } else {
-        console.log('❌ AdminRoute: Auth check FAILED');
+        console.log('❌ AdminRoute: Auth check FAILED - check false or missing');
         setOk(false);
       }
     } catch (error) {
       console.error('❌ AdminRoute: Auth check error:', error);
+      console.error('👮 AdminRoute: Error details:', error.message, error.stack);
       setOk(false);
     }
   };
 
   useEffect(() => {
-    if (currentUser) {
-      authCheck();
-    } else {
-      setOk(false);
-    }
+    console.log('👮 AdminRoute: useEffect triggered, currentUser changed to:', currentUser);
+    // Check auth whenever component mounts or currentUser changes
+    authCheck();
   }, [currentUser]);
 
   // Loading state
-  if (ok === null) return <Spinner />;
+  if (ok === null) {
+    console.log('👮 AdminRoute: Rendering Spinner (loading)');
+    return <Spinner />;
+  }
   
   // Not admin - redirect to home
-  if (ok === false) return <Navigate to="/" />;
+  if (ok === false) {
+    console.log('👮 AdminRoute: Admin auth failed - redirecting to home');
+    return <Navigate to="/" />;
+  }
   
-  // Is admin - show protected content
+  // Admin authenticated - show protected content
+  console.log('👮 AdminRoute: Admin auth passed - rendering Outlet');
   return <Outlet />;
 }

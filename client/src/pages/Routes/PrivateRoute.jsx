@@ -10,7 +10,10 @@ export default function PrivateRoute() {
 
   const authCheck = async () => {
     try {
-      console.log('🔐 PrivateRoute: Checking user auth...');
+      console.log('🔐 PrivateRoute: Starting auth check...');
+      console.log('🔐 PrivateRoute: currentUser from Redux:', currentUser);
+      console.log('🔐 PrivateRoute: API_BASE:', API_BASE);
+      
       const res = await fetch(`${API_BASE}/api/user/user-auth`, {
         method: "GET",
         headers: {
@@ -19,35 +22,44 @@ export default function PrivateRoute() {
         },
         credentials: "include",
       });
+      
+      console.log('🔐 PrivateRoute: Response status:', res.status);
       const data = await res.json();
       console.log('🔐 PrivateRoute auth response:', data);
+      
       if (data?.check === true) {
         console.log('✅ PrivateRoute: Auth check PASSED');
         setOk(true);
       } else {
-        console.log('❌ PrivateRoute: Auth check FAILED');
+        console.log('❌ PrivateRoute: Auth check FAILED - check false or missing');
         setOk(false);
       }
     } catch (error) {
       console.error('❌ PrivateRoute: Auth check error:', error);
+      console.error('🔐 PrivateRoute: Error details:', error.message, error.stack);
       setOk(false);
     }
   };
 
   useEffect(() => {
-    if (currentUser) {
-      authCheck();
-    } else {
-      setOk(false);
-    }
+    console.log('🔐 PrivateRoute: useEffect triggered, currentUser changed to:', currentUser);
+    // Check auth whenever component mounts or currentUser changes
+    authCheck();
   }, [currentUser]);
 
   // Loading state
-  if (ok === null) return <Spinner />;
+  if (ok === null) {
+    console.log('🔐 PrivateRoute: Rendering Spinner (loading)');
+    return <Spinner />;
+  }
   
   // Not authenticated - redirect to login
-  if (ok === false) return <Navigate to="/login" />;
+  if (ok === false) {
+    console.log('🔐 PrivateRoute: Auth failed - redirecting to login');
+    return <Navigate to="/login" />;
+  }
   
   // Authenticated - show protected content
+  console.log('🔐 PrivateRoute: Auth passed - rendering Outlet');
   return <Outlet />;
 }

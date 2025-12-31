@@ -40,15 +40,40 @@ const app = express();
 const httpServer = createServer(app);
 
 // Configure CORS for local development and deployed frontend
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://localhost:5174",
+  "https://travelzone-iota.vercel.app",
+  "https://*.vercel.app" // Allow all Vercel preview deployments
+];
+
 app.use(cors({
-  origin: [
-    "http://localhost:5173",
-    "http://localhost:5174",
-    "https://travelzone-iota.vercel.app"
-  ],
+  origin: function(origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) {
+      return callback(null, true);
+    }
+    
+    // Check if origin is in whitelist or matches Vercel pattern
+    const isAllowed = allowedOrigins.some(allowed => {
+      if (allowed.includes('*')) {
+        const pattern = allowed.replace('https://', '').replace('.vercel.app', '');
+        return origin.includes('vercel.app');
+      }
+      return origin === allowed;
+    });
+    
+    if (isAllowed) {
+      callback(null, true);
+    } else {
+      console.log('❌ CORS blocked origin:', origin);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"]
+  allowedHeaders: ["Content-Type", "Authorization", "Cookie"],
+  maxAge: 3600
 }));
 
 // Security middleware

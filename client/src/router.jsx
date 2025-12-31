@@ -12,6 +12,7 @@ import Login from "./pages/Login";
 import Profile from "./pages/Profile";
 import About from "./pages/About";
 import PrivateRoute from "./pages/Routes/PrivateRoute";
+import AdminRoute from "./pages/Routes/AdminRoute";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import UpdatePackage from "./pages/admin/UpdatePackage";
 import Search from "./pages/Search";
@@ -87,6 +88,10 @@ export const router = createBrowserRouter(
       {/* Profile routes */}
       <Route element={<PrivateRoute />} errorElement={<ErrorBoundary />}>
         <Route path="profile/user" element={<Profile />} />
+      </Route>
+
+      {/* Admin routes */}
+      <Route element={<AdminRoute />} errorElement={<ErrorBoundary />}>
         <Route path="profile/admin" element={<AdminDashboard />} />
         <Route path="profile/admin/update-package/:id" element={<UpdatePackage />} />
       </Route>

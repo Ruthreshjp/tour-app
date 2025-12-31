@@ -10,6 +10,7 @@ export default function PrivateRoute() {
 
   const authCheck = async () => {
     try {
+      console.log('🔐 PrivateRoute: Checking user auth...');
       const res = await fetch(`${API_BASE}/api/user/user-auth`, {
         method: "GET",
         headers: {
@@ -19,13 +20,16 @@ export default function PrivateRoute() {
         credentials: "include",
       });
       const data = await res.json();
+      console.log('🔐 PrivateRoute auth response:', data);
       if (data?.check === true) {
+        console.log('✅ PrivateRoute: Auth check PASSED');
         setOk(true);
       } else {
+        console.log('❌ PrivateRoute: Auth check FAILED');
         setOk(false);
       }
     } catch (error) {
-      console.error('Auth check failed:', error);
+      console.error('❌ PrivateRoute: Auth check error:', error);
       setOk(false);
     }
   };

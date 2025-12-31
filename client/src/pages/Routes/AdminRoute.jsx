@@ -10,6 +10,7 @@ export default function AdminRoute() {
 
   const authCheck = async () => {
     try {
+      console.log('👮 AdminRoute: Checking admin auth...');
       const res = await fetch(`${API_BASE}/api/user/admin-auth`, {
         method: "GET",
         headers: {
@@ -19,13 +20,16 @@ export default function AdminRoute() {
         credentials: "include",
       });
       const data = await res.json();
+      console.log('👮 AdminRoute auth response:', data);
       if (data?.check === true) {
+        console.log('✅ AdminRoute: Auth check PASSED');
         setOk(true);
       } else {
+        console.log('❌ AdminRoute: Auth check FAILED');
         setOk(false);
       }
     } catch (error) {
-      console.error('Admin auth check failed:', error);
+      console.error('❌ AdminRoute: Auth check error:', error);
       setOk(false);
     }
   };

@@ -93,13 +93,19 @@ export const loginController = async (req, res) => {
       maxAge: 4 * 24 * 60 * 60 * 1000, // 4 days
     };
     
+    console.log('🔑 Login: NODE_ENV =', process.env.NODE_ENV);
+    
     if (process.env.NODE_ENV === "production") {
       cookieOptions.secure = true;
       cookieOptions.sameSite = "none"; // Required for cross-origin cookies
+      console.log('🔑 Login: Setting production cookies - secure=true, sameSite=none');
     } else {
       cookieOptions.secure = false;
       cookieOptions.sameSite = "lax";
+      console.log('🔑 Login: Setting development cookies - secure=false, sameSite=lax');
     }
+    
+    console.log('🔑 Login: Final cookie options:', cookieOptions);
     
     res
       .cookie("X_TTMS_access_token", token, cookieOptions)

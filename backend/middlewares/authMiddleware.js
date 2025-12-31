@@ -3,14 +3,27 @@ import User from "../models/user.model.js";
 
 // Helper to extract token from request
 const getTokenFromRequest = (req) => {
+  console.log('🔐 Auth Middleware: Extracting token from request...');
+  console.log('🔐 Auth Middleware: req.cookies =', req.cookies);
+  console.log('🔐 Auth Middleware: Authorization header =', req.headers?.authorization);
+  
   // Check Authorization header first
   const authHeader = req.headers?.authorization || req.headers?.Authorization;
   if (authHeader?.startsWith('Bearer ')) {
-    return authHeader.substring(7);
+    const token = authHeader.substring(7);
+    console.log('🔐 Auth Middleware: Found token in Authorization header');
+    return token;
   }
   
   // Then check for cookie
-  return req.cookies?.X_TTMS_access_token;
+  const cookieToken = req.cookies?.X_TTMS_access_token;
+  if (cookieToken) {
+    console.log('🔐 Auth Middleware: Found token in X_TTMS_access_token cookie');
+  } else {
+    console.log('🔐 Auth Middleware: NO token found in cookies or headers');
+  }
+  
+  return cookieToken;
 };
 
 // Verify JWT token and require sign in
@@ -23,20 +36,25 @@ export const verifyToken = async (req, res, next) => {
     const token = getTokenFromRequest(req);
     
     if (!token || typeof token !== "string" || token.trim() === "") {
+      console.log('🔐 Auth Middleware: No valid token found - returning 401');
       return res.status(401).json({
         success: false,
         message: "Authentication required"
       });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    console.log('🔐 Auth Middleware: Token found, verifying with JWT_SECRET');
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || "bfuiwrht7895t5uith");
+    console.log('🔐 Auth Middleware: Token verified successfully, user ID:', decoded.id);
     req.user = decoded;
     next();
   } catch (error) {
-    console.error('Token verification error:', error);
+    console.error('🔐 Auth Middleware: Token verification error:', error.message);
+    console.error('🔐 Auth Middleware: JWT_SECRET exists?', !!process.env.JWT_SECRET);
     
     // Specific error messages for different JWT errors
     if (error.name === 'TokenExpiredError') {
+      console.log('🔐 Auth Middleware: Token expired');
       return res.status(401).json({
         success: false,
         message: 'Session expired. Please log in again'
@@ -44,6 +62,7 @@ export const verifyToken = async (req, res, next) => {
     }
     
     if (error.name === 'JsonWebTokenError') {
+      console.log('🔐 Auth Middleware: Invalid token signature or format');
       return res.status(401).json({
         success: false,
         message: 'Invalid token. Please log in again'

@@ -27,7 +27,10 @@ import { fileURLToPath } from 'url';
 
 dotenv.config();
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+let resend;
+if (process.env.RESEND_API_KEY) {
+  resend = new Resend(process.env.RESEND_API_KEY);
+}
 
 // ES module dirname configuration
 const __filename = fileURLToPath(import.meta.url);
@@ -134,6 +137,10 @@ app.get('/api/proxy-image', async (req, res) => {
 
 // Email sending endpoint
 app.post("/api/send-email", async (req, res) => {
+  if (!resend) {
+    return res.status(500).json({ error: "Email service not configured" });
+  }
+
   const { user_name, user_email, message } = req.body;
 
   if (!user_name || !user_email || !message) {

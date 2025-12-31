@@ -8,7 +8,7 @@ import "react-toastify/dist/ReactToastify.css";
 
 const App = () => {
   // Configure axios defaults
-  const baseURL = (import.meta.env.VITE_API_URL || 'https://travelzone.onrender.com') + '/api';
+  const baseURL = import.meta.env.VITE_API_URL || 'https://travelzone.onrender.com';
   axios.defaults.baseURL = baseURL;
   axios.defaults.withCredentials = true;
 

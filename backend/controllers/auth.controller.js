@@ -88,21 +88,25 @@ export const loginController = async (req, res) => {
     const { password: pass, ...rest } = validUser._doc;
     
     // Set cookie with proper CORS settings
+    // IMPORTANT: Use sameSite=none for cross-origin cookie transmission
+    // (even in development when frontend is on different domain)
     const cookieOptions = {
       httpOnly: true,
       maxAge: 4 * 24 * 60 * 60 * 1000, // 4 days
+      sameSite: "none", // Required for cross-origin cookies (Vercel frontend to Render backend)
     };
     
     console.log('🔑 Login: NODE_ENV =', process.env.NODE_ENV);
     
     if (process.env.NODE_ENV === "production") {
       cookieOptions.secure = true;
-      cookieOptions.sameSite = "none"; // Required for cross-origin cookies
       console.log('🔑 Login: Setting production cookies - secure=true, sameSite=none');
     } else {
-      cookieOptions.secure = false;
-      cookieOptions.sameSite = "lax";
-      console.log('🔑 Login: Setting development cookies - secure=false, sameSite=lax');
+      // Even in development, use secure=true if we're behind a proxy (Render/Vercel)
+      // Use secure=false only for true localhost development
+      const isLocalhost = process.env.BACKEND_URL?.includes('localhost');
+      cookieOptions.secure = !isLocalhost;
+      console.log('🔑 Login: Setting cookies - secure=' + cookieOptions.secure + ', sameSite=none (cross-origin support)');
     }
     
     console.log('🔑 Login: Final cookie options:', cookieOptions);
@@ -130,11 +134,14 @@ export const logOutController = (req, res) => {
   try {
     const cookieOptions = {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      sameSite: "none", // Match the login cookie settings
     };
     
     if (process.env.NODE_ENV === "production") {
-      cookieOptions.sameSite = "none";
+      cookieOptions.secure = true;
+    } else {
+      const isLocalhost = process.env.BACKEND_URL?.includes('localhost');
+      cookieOptions.secure = !isLocalhost;
     }
     
     res

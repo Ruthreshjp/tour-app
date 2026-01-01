@@ -1,12 +1,9 @@
 // src/pages/admin/AdminDashboard.jsx
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { API_BASE } from "../../utils/apiBase";
 import {
-  updateUserStart,
-  updateUserSuccess,
-  updateUserFailure,
   logOutStart,
   logOutSuccess,
   logOutFailure,
@@ -14,7 +11,6 @@ import {
   deleteUserAccountSuccess,
   deleteUserAccountFailure,
 } from "../../redux/user/userSlice";
-import axios from 'axios';
 import AllBookings from "./AllBookings";
 import AdminUpdateProfile from "./AdminUpdateProfile";
 import AddPackages from "./AddPackages";
@@ -31,10 +27,7 @@ import { toast } from "react-toastify";
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const fileRef = useRef(null);
-  const { currentUser, loading, error } = useSelector((state) => state.user);
-  const [profilePhoto, setProfilePhoto] = useState(undefined);
-  const [photoPercentage, setPhotoPercentage] = useState(0);
+  const { currentUser } = useSelector((state) => state.user);
   const [activePanelId, setActivePanelId] = useState(1);
   const [formData, setFormData] = useState({
     username: "",
@@ -83,8 +76,9 @@ const AdminDashboard = () => {
     if (CONFIRM) {
       try {
         dispatch(deleteUserAccountStart());
-        const res = await fetch(`/api/user/delete/${currentUser._id}`, {
+        const res = await fetch(`${API_BASE}/api/user/delete/${currentUser._id}`, {
           method: "DELETE",
+          credentials: "include",
         });
         const data = await res.json();
         if (data?.success === false) {
@@ -94,7 +88,10 @@ const AdminDashboard = () => {
         }
         dispatch(deleteUserAccountSuccess());
         toast.success(data?.message);
-      } catch (error) {}
+      } catch (error) {
+        console.error('Error deleting account:', error);
+        toast.error("Failed to delete account");
+      }
     }
   };
 

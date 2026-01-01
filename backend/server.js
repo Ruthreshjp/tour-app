@@ -17,6 +17,7 @@ import businessInventoryRoute from "./routes/businessInventory.route.js";
 import businessViewTrackingRoute from "./routes/businessViewTracking.route.js";
 import analyticsRoute from "./routes/analytics.routes.js";
 import geocodeRoute from "./routes/geocode.route.js";
+import packageBookingRoute from "./routes/packageBooking.route.js";
 import dotenv from "dotenv";
 import path from "path";
 import cors from "cors";
@@ -197,6 +198,7 @@ app.post("/api/send-email", async (req, res) => {
 app.use("/api/auth", authRoute);
 app.use("/api/user", userRoute);
 app.use("/api/package", packageRoute);
+app.use("/api/package-booking", packageBookingRoute);
 app.use("/api/rating", ratingRoute);
 app.use("/api/booking", bookingRoute);
 app.use("/api/payment", paymentRoutes);

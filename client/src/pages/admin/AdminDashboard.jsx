@@ -2,6 +2,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
+import { API_BASE } from "../../utils/apiBase";
 import {
   updateUserStart,
   updateUserSuccess,
@@ -58,7 +59,9 @@ const AdminDashboard = () => {
   const handleLogout = async () => {
     try {
       dispatch(logOutStart());
-      const res = await fetch("/api/auth/logout");
+      const res = await fetch(`${API_BASE}/api/auth/logout`, {
+        credentials: "include",
+      });
       const data = await res.json();
       if (data?.success !== true) {
         dispatch(logOutFailure(data?.message));
@@ -104,8 +107,9 @@ const AdminDashboard = () => {
               <div className="w-full flex flex-col items-center relative">
                 <img
                   src={
-                    `http://localhost:8000/images/${formData.avatar}` ||
-                    formData.avatar
+                    formData.avatar && !formData.avatar.startsWith('https://firebasestorage.googleapis.com')
+                      ? `${API_BASE}/images/${formData.avatar}`
+                      : "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTueIx2Jkawe7r91I50VfVAZLS60yx8RjiSfQ&s"
                   }
                   alt="Profile photo"
                   className="w-37 h-37 object-cover rounded-full"

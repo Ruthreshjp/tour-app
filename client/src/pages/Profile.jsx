@@ -48,7 +48,9 @@ const Profile = () => {
   const handleLogout = async () => {
     try {
       dispatch(logOutStart());
-      const res = await fetch(`${API_BASE}/api/auth/logout`);
+      const res = await fetch(`${API_BASE}/api/auth/logout`, {
+        credentials: "include",
+      });
       const data = await res.json();
       if (data?.success !== true) {
         dispatch(logOutFailure(data?.message));
@@ -97,7 +99,7 @@ const Profile = () => {
                 <img
                   src={
                     currentUser.avatar && !currentUser.avatar.startsWith('https://firebasestorage.googleapis.com')
-                      ? `http://localhost:8000/images/${currentUser.avatar}`
+                      ? `${API_BASE}/images/${currentUser.avatar}`
                       : "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTueIx2Jkawe7r91I50VfVAZLS60yx8RjiSfQ&s"
                   }
                   alt="Profile photo"

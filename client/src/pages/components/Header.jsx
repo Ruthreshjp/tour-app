@@ -3,12 +3,14 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { logOutSuccess } from "../../redux/user/userSlice";
 import { logout as businessLogout } from "../../redux/business/businessSlice";
+import { API_BASE } from "../../utils/apiBase";
 // Using public directory path instead of asset import
 
 const Header = () => {
   const { currentUser } = useSelector((state) => state.user);
   const { currentBusiness, isAuthenticated: isBusinessAuthenticated } = useSelector((state) => state.business || {});
   const [menuOpen, setMenuOpen] = useState(false);
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [businessUser, setBusinessUser] = useState(null);
   const location = useLocation();
   const dispatch = useDispatch();
@@ -126,11 +128,23 @@ const Header = () => {
   }
 
   // Logout handlers
-  const handleUserLogout = () => {
+  const handleUserLogout = async () => {
+    try {
+      // Call backend logout endpoint
+      await fetch(`${API_BASE}/api/auth/logout`, {
+        method: "GET",
+        credentials: "include",
+      });
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+    
     dispatch(logOutSuccess());
     // Clear any user-related data
     localStorage.removeItem('persist:root');
+    localStorage.removeItem('userToken');
     setMenuOpen(false);
+    setProfileMenuOpen(false);
     navigate('/');
   };
 
@@ -224,25 +238,61 @@ const Header = () => {
             {/* Profile/Login */}
             <div className="flex-1 flex justify-end items-center gap-4">
               {isBusinessLoggedIn ? (
-                <Link
-                  to="/business/dashboard"
-                  onClick={handleLinkClick}
-                  className="flex items-center gap-2 bg-orange-500 text-white px-4 py-2 rounded-full border border-gray-100 hover:bg-orange-600 transition-colors"
-                >
-                  <span className="text-xl">🏢</span>
-                  <span className="hidden sm:inline font-medium">{businessUserData?.businessName || 'Business'}</span>
-                </Link>
+                <div className="relative">
+                  <button
+                    onClick={() => setProfileMenuOpen(!profileMenuOpen)}
+                    className="flex items-center gap-2 bg-orange-500 text-white px-4 py-2 rounded-full border border-gray-100 hover:bg-orange-600 transition-colors"
+                  >
+                    <span className="text-xl">🏢</span>
+                    <span className="hidden sm:inline font-medium">{businessUserData?.businessName || 'Business'}</span>
+                  </button>
+                  {profileMenuOpen && (
+                    <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+                      <Link
+                        to="/business/dashboard"
+                        onClick={() => { setProfileMenuOpen(false); handleLinkClick(); }}
+                        className="block px-4 py-2 hover:bg-gray-100 rounded-t-lg"
+                      >
+                        Dashboard
+                      </Link>
+                      <button
+                        onClick={handleBusinessLogout}
+                        className="w-full text-left px-4 py-2 hover:bg-gray-100 rounded-b-lg text-red-600 font-medium"
+                      >
+                        Logout
+                      </button>
+                    </div>
+                  )}
+                </div>
               ) : currentUser ? (
-                <Link
-                  to={`/profile/${currentUser.user_role === 1 ? "admin" : "user"}`}
-                  onClick={handleLinkClick}
-                  className="flex items-center gap-2 hover:bg-gray-100 px-3 py-2 rounded-full transition-colors"
-                >
-                  <span className="text-2xl">👤</span>
-                  <span className="hidden sm:inline text-gray-700 font-medium">
-                    {currentUser.user_role === 1 ? 'Admin' : currentUser.username || 'User'}
-                  </span>
-                </Link>
+                <div className="relative">
+                  <button
+                    onClick={() => setProfileMenuOpen(!profileMenuOpen)}
+                    className="flex items-center gap-2 hover:bg-gray-100 px-3 py-2 rounded-full transition-colors"
+                  >
+                    <span className="text-2xl">👤</span>
+                    <span className="hidden sm:inline text-gray-700 font-medium">
+                      {currentUser.user_role === 1 ? 'Admin' : currentUser.username || 'User'}
+                    </span>
+                  </button>
+                  {profileMenuOpen && (
+                    <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+                      <Link
+                        to={`/profile/${currentUser.user_role === 1 ? "admin" : "user"}`}
+                        onClick={() => { setProfileMenuOpen(false); handleLinkClick(); }}
+                        className="block px-4 py-2 hover:bg-gray-100 rounded-t-lg"
+                      >
+                        {currentUser.user_role === 1 ? 'Admin Dashboard' : 'My Profile'}
+                      </Link>
+                      <button
+                        onClick={handleUserLogout}
+                        className="w-full text-left px-4 py-2 hover:bg-gray-100 rounded-b-lg text-red-600 font-medium"
+                      >
+                        Logout
+                      </button>
+                    </div>
+                  )}
+                </div>
               ) : (
                 <Link
                   className="bg-orange-500 text-white px-6 py-2 rounded-full border border-gray-100 hover:bg-orange-600 transition-colors"
@@ -301,25 +351,41 @@ const Header = () => {
               )}
               <li>
                 {isBusinessLoggedIn ? (
-                  <Link
-                    to="/business/dashboard"
-                    onClick={handleLinkClick}
-                    className="flex items-center gap-2"
-                  >
-                    <span className="text-2xl">🏢</span>
-                    <span className="font-medium">{businessUserData?.businessName || 'Business'}</span>
-                  </Link>
+                  <div className="flex flex-col gap-2">
+                    <Link
+                      to="/business/dashboard"
+                      onClick={handleLinkClick}
+                      className="flex items-center gap-2"
+                    >
+                      <span className="text-2xl">🏢</span>
+                      <span className="font-medium">{businessUserData?.businessName || 'Business'}</span>
+                    </Link>
+                    <button
+                      onClick={handleBusinessLogout}
+                      className="text-left text-red-600 font-medium pl-8"
+                    >
+                      Logout
+                    </button>
+                  </div>
                 ) : currentUser ? (
-                  <Link
-                    to={`/profile/${currentUser.user_role === 1 ? "admin" : "user"}`}
-                    onClick={handleLinkClick}
-                    className="flex items-center gap-2"
-                  >
-                    <span className="text-2xl">👤</span>
-                    <span className="font-medium">
-                      {currentUser.user_role === 1 ? 'Admin' : currentUser.username || 'User'}
-                    </span>
-                  </Link>
+                  <div className="flex flex-col gap-2">
+                    <Link
+                      to={`/profile/${currentUser.user_role === 1 ? "admin" : "user"}`}
+                      onClick={handleLinkClick}
+                      className="flex items-center gap-2"
+                    >
+                      <span className="text-2xl">👤</span>
+                      <span className="font-medium">
+                        {currentUser.user_role === 1 ? 'Admin Dashboard' : 'My Profile'}
+                      </span>
+                    </Link>
+                    <button
+                      onClick={handleUserLogout}
+                      className="text-left text-red-600 font-medium pl-8"
+                    >
+                      Logout
+                    </button>
+                  </div>
                 ) : (
                   <Link
                     to="/login"

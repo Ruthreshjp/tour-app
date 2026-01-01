@@ -1,7 +1,7 @@
-import axios from "axios";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { FaTrash } from "react-icons/fa";
 import { toast } from "react-toastify";
+import { API_BASE } from "../../utils/apiBase";
 
 const AllUsers = () => {
   const [allUser, setAllUsers] = useState([]);
@@ -12,7 +12,9 @@ const AllUsers = () => {
   const getUsers = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`/api/user/getAllUsers?searchTerm=${search}`);
+      const res = await fetch(`${API_BASE}/api/user/getAllUsers?searchTerm=${search}`, {
+        credentials: "include",
+      });
       const data = await res.json();
 
       if (data && data?.success === false) {
@@ -29,7 +31,12 @@ const AllUsers = () => {
   };
   useEffect(() => {
     getUsers();
-    if (search) getUsers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    getUsers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search]);
 
   const handleUserDelete = async (userId) => {
@@ -39,8 +46,9 @@ const AllUsers = () => {
     if (CONFIRM) {
       setLoading(true);
       try {
-        const res = await fetch(`/api/user/delete-user/${userId}`, {
+        const res = await fetch(`${API_BASE}/api/user/delete-user/${userId}`, {
           method: "DELETE",
+          credentials: "include",
         });
         const data = await res.json();
         if (data?.success === false) {
@@ -51,7 +59,10 @@ const AllUsers = () => {
         setLoading(false);
         toast.success(data?.message);
         getUsers();
-      } catch (error) {}
+      } catch (error) {
+        console.error('Error deleting user:', error);
+        toast.error("Failed to delete user");
+      }
     }
   };
 

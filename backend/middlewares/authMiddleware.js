@@ -45,7 +45,12 @@ export const verifyToken = async (req, res, next) => {
 
     console.log('🔐 Auth Middleware: Token found, verifying with JWT_SECRET');
     const decoded = jwt.verify(token, process.env.JWT_SECRET || "bfuiwrht7895t5uith");
-    console.log('🔐 Auth Middleware: Token verified successfully, user ID:', decoded.id);
+    console.log('🔐 Auth Middleware: Token verified successfully, decoded:', {
+      id: decoded.id,
+      user_role: decoded.user_role,
+      iat: decoded.iat,
+      exp: decoded.exp
+    });
     req.user = decoded;
     next();
   } catch (error) {
@@ -79,7 +84,11 @@ export const verifyToken = async (req, res, next) => {
 // Verify admin role
 export const isAdmin = async (req, res, next) => {
   try {
+    console.log('👮 IsAdmin Middleware: Starting admin check...');
+    console.log('👮 IsAdmin Middleware: req.user =', req.user);
+    
     if (!req.user?.id) {
+      console.log('👮 IsAdmin Middleware: No user ID found');
       return res.status(401).json({
         success: false,
         message: "Authentication required"
@@ -89,7 +98,10 @@ export const isAdmin = async (req, res, next) => {
     const user = await User.findById(req.user.id)
       .select('role user_role');
 
+    console.log('👮 IsAdmin Middleware: User found:', { id: user?._id, user_role: user?.user_role, role: user?.role });
+
     if (!user) {
+      console.log('👮 IsAdmin Middleware: User not found in DB');
       return res.status(404).json({
         success: false,
         message: "User not found"
@@ -98,15 +110,17 @@ export const isAdmin = async (req, res, next) => {
 
     // Support both role and user_role for backward compatibility
     if (user.role === 'admin' || user.user_role === 1) {
+      console.log('👮 IsAdmin Middleware: User is admin, proceeding');
       next();
     } else {
+      console.log('👮 IsAdmin Middleware: User is NOT admin - user_role:', user.user_role, 'role:', user.role);
       return res.status(403).json({
         success: false,
         message: "Admin access required"
       });
     }
   } catch (error) {
-    console.error('Admin verification error:', error);
+    console.error('👮 IsAdmin Middleware: Error:', error);
     res.status(500).json({
       success: false,
       message: 'Error verifying admin access'

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import axios from "axios";
 import { useParams, useNavigate } from "react-router-dom";
+import { API_BASE } from "../../utils/apiBase";
 
 const AddPackages = () => {
   const { id } = useParams();
@@ -89,8 +90,8 @@ const AddPackages = () => {
     try {
       const method = id ? "put" : "post";
       const endpoint = id
-        ? `/api/package/update-package/${id}`
-        : `/api/package/add-package`;
+        ? `${API_BASE}/api/package/update-package/${id}`
+        : `${API_BASE}/api/package/add-package`;
 
       console.log(`Sending ${method.toUpperCase()} request to: ${endpoint}`);
 

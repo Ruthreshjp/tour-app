@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import Chart from "../components/Chart";
 import axios from "axios";
 import { toast } from "react-toastify";
+import { API_BASE } from "../../utils/apiBase";
 
 const axiosWithCredentials = axios.create({
   withCredentials: true
@@ -24,7 +25,8 @@ const AllBookings = () => {
     try {
       setLoading(true);
       const res = await fetch(
-        `/api/booking/get-currentBookings?searchTerm=${searchTerm}`
+        `${API_BASE}/api/booking/get-currentBookings?searchTerm=${searchTerm}`,
+        { credentials: 'include' }
       );
       const data = await res.json();
       if (data?.success) {
@@ -44,7 +46,7 @@ const AllBookings = () => {
     try {
       console.log('📦 Fetching package bookings for admin...');
       const query = paymentFilter !== 'all' ? `?paymentStatus=${paymentFilter}` : '';
-      const response = await axiosWithCredentials.get(`/api/package-booking/admin/all${query}`);
+      const response = await axiosWithCredentials.get(`${API_BASE}/api/package-booking/admin/all${query}`);
       console.log('✅ Package bookings response:', response.data);
       if (response.data.success) {
         setPackageBookings(response.data.bookings);

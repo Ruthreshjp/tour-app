@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import axios from 'axios';
 import { toast } from 'react-toastify';
+import { API_BASE } from '../../utils/apiBase';
 
 const BusinessAdmits = () => {
   const [pendingBusinesses, setPendingBusinesses] = useState([]);
@@ -15,10 +16,8 @@ const BusinessAdmits = () => {
 
   const fetchBusinesses = async () => {
     try {
-      const res = await axios.get('/api/admin/businesses', {
-        headers: {
-          'Authorization': `Bearer ${currentUser?.token}`
-        }
+      const res = await axios.get(`${API_BASE}/api/admin/businesses`, {
+        withCredentials: true
       });
       setPendingBusinesses(res.data.pending || []);
       setApprovedBusinesses(res.data.approved || []);
@@ -31,12 +30,10 @@ const BusinessAdmits = () => {
   const handleApproval = async (businessId, status) => {
     try {
       setLoading(true);
-      const res = await axios.put(`/api/admin/business/${businessId}/status`, 
+      const res = await axios.put(`${API_BASE}/api/admin/business/${businessId}/status`, 
         { status },
         {
-          headers: {
-            'Authorization': `Bearer ${currentUser?.token}`
-          }
+          withCredentials: true
         }
       );
 

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
+import { API_BASE } from "../../utils/apiBase";
 
 const AllPackages = () => {
   const [packages, setPackages] = useState([]);
@@ -15,13 +16,13 @@ const AllPackages = () => {
       setLoading(true);
       let url =
         filter === "offer" //offer
-          ? `/api/package/get-packages?searchTerm=${search}&offer=true`
+          ? `${API_BASE}/api/package/get-packages?searchTerm=${search}&offer=true`
           : filter === "latest" //latest
-          ? `/api/package/get-packages?searchTerm=${search}&sort=createdAt`
+          ? `${API_BASE}/api/package/get-packages?searchTerm=${search}&sort=createdAt`
           : filter === "top" //top rated
-          ? `/api/package/get-packages?searchTerm=${search}&sort=packageRating`
-          : `/api/package/get-packages?searchTerm=${search}`; //all
-      const res = await fetch(url);
+          ? `${API_BASE}/api/package/get-packages?searchTerm=${search}&sort=packageRating`
+          : `${API_BASE}/api/package/get-packages?searchTerm=${search}`; //all
+      const res = await fetch(url, { credentials: 'include' });
       const data = await res.json();
       if (data?.success) {
         setPackages(data?.packages);
@@ -45,13 +46,13 @@ const AllPackages = () => {
     const startIndex = numberOfPackages;
     let url =
       filter === "offer" //offer
-        ? `/api/package/get-packages?searchTerm=${search}&offer=true&startIndex=${startIndex}`
+        ? `${API_BASE}/api/package/get-packages?searchTerm=${search}&offer=true&startIndex=${startIndex}`
         : filter === "latest" //latest
-        ? `/api/package/get-packages?searchTerm=${search}&sort=createdAt&startIndex=${startIndex}`
+        ? `${API_BASE}/api/package/get-packages?searchTerm=${search}&sort=createdAt&startIndex=${startIndex}`
         : filter === "top" //top rated
-        ? `/api/package/get-packages?searchTerm=${search}&sort=packageRating&startIndex=${startIndex}`
-        : `/api/package/get-packages?searchTerm=${search}&startIndex=${startIndex}`; //all
-    const res = await fetch(url);
+        ? `${API_BASE}/api/package/get-packages?searchTerm=${search}&sort=packageRating&startIndex=${startIndex}`
+        : `${API_BASE}/api/package/get-packages?searchTerm=${search}&startIndex=${startIndex}`; //all
+    const res = await fetch(url, { credentials: 'include' });
     const data = await res.json();
     if (data?.packages?.length < 9) {
       setShowMoreBtn(false);

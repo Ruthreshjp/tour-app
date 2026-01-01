@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import axios from "axios";
+import { API_BASE } from "../../utils/apiBase";
 
 const Payments = () => {
   const { currentUser } = useSelector((state) => state.user);
@@ -14,7 +15,7 @@ const Payments = () => {
   const getAllBookings = async () => {
     try {
       setLoading(true);
-      const response = await axios.get('/api/package-booking/admin/all', {
+      const response = await axios.get(`${API_BASE}/api/package-booking/admin/all`, {
         withCredentials: true
       });
       

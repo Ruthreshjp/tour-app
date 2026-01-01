@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import { toast } from "react-toastify";
+import { API_BASE } from "../../utils/apiBase";
 
 const UpdatePackage = () => {
   const params = useParams();
@@ -27,7 +28,7 @@ const UpdatePackage = () => {
   const getPackageData = async () => {
     try {
       console.log("Fetching package data for ID:", params.id);
-      const res = await fetch(`http://localhost:8000/api/package/get-package-data/${params?.id}`, {
+      const res = await fetch(`${API_BASE}/api/package/get-package-data/${params?.id}`, {
         credentials: "include",
       });
       if (!res.ok) {
@@ -141,7 +142,7 @@ const UpdatePackage = () => {
       });
 
       console.log("Sending request to update package...");
-      const res = await fetch(`http://localhost:8000/api/package/update-package/${params?.id}`, {
+      const res = await fetch(`${API_BASE}/api/package/update-package/${params?.id}`, {
         method: "PUT",
         credentials: "include",
         body: form,

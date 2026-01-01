@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
+import { API_BASE } from "../../utils/apiBase";
 
 const BusinessApprovals = () => {
   const [businesses, setBusinesses] = useState([]);
@@ -13,15 +14,8 @@ const BusinessApprovals = () => {
     try {
       setLoading(true);
       setError(null);
-      const token = localStorage.getItem("adminToken");
-      if (!token) {
-        throw new Error("No admin token found. Please log in again.");
-      }
 
-      const response = await axios.get("/api/business/admin/businesses", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+      const response = await axios.get(`${API_BASE}/api/business/admin/businesses`, {
         withCredentials: true,
       });
 
@@ -53,15 +47,12 @@ const BusinessApprovals = () => {
       }
 
       const response = await axios.put(
-        `/api/business/admin/businesses/${businessId}/status`,
+        `${API_BASE}/api/business/admin/businesses/${businessId}/status`,
         { 
           isVerified: action === 'approve',
           isActive: action === 'approve'
         },
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
           withCredentials: true,
         }
       );
@@ -95,14 +86,11 @@ const BusinessApprovals = () => {
       }
 
       const response = await axios.put(
-        `/api/business/admin/businesses/${businessId}/status`,
+        `${API_BASE}/api/business/admin/businesses/${businessId}/status`,
         { 
           isActive: action === 'reactivate'
         },
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
           withCredentials: true,
         }
       );
@@ -140,11 +128,8 @@ const BusinessApprovals = () => {
       }
 
       const response = await axios.delete(
-        `/api/business/admin/businesses/${businessId}`,
+        `${API_BASE}/api/business/admin/businesses/${businessId}`,
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
           withCredentials: true,
         }
       );

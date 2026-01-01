@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
+import { API_BASE } from "../../utils/apiBase";
 
 const BusinessManagement = () => {
   const [businesses, setBusinesses] = useState([]);
@@ -13,8 +14,7 @@ const BusinessManagement = () => {
   const fetchApprovedBusinesses = async () => {
     try {
       setLoading(true);
-      const response = await axios.get("/api/business/admin/businesses", {
-        headers: { Authorization: `Bearer ${localStorage.getItem("adminToken")}` },
+      const response = await axios.get(`${API_BASE}/api/business/admin/businesses`, {
         withCredentials: true
       });
       if (response.data.success) {
@@ -33,8 +33,7 @@ const BusinessManagement = () => {
   const fetchBusinessStats = async (businessId) => {
     try {
       setStatsLoading(true);
-      const response = await axios.get(`/api/business/admin/businesses/${businessId}/stats`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("adminToken")}` },
+      const response = await axios.get(`${API_BASE}/api/business/admin/businesses/${businessId}/stats`, {
         withCredentials: true
       });
       if (response.data.success) {
@@ -64,10 +63,9 @@ const BusinessManagement = () => {
     if (window.confirm("Are you sure you want to suspend this business temporarily?\n\nThe business will be hidden from all listings but data will be preserved.")) {
       try {
         const response = await axios.put(
-          `/api/business/admin/businesses/${id}/status`,
+          `${API_BASE}/api/business/admin/businesses/${id}/status`,
           { isActive: false },
           { 
-            headers: { Authorization: `Bearer ${localStorage.getItem("adminToken")}` },
             withCredentials: true
           }
         );
@@ -89,10 +87,9 @@ const BusinessManagement = () => {
     if (window.confirm("Are you sure you want to reactivate this business?\n\nThe business will be visible in all listings again.")) {
       try {
         const response = await axios.put(
-          `/api/business/admin/businesses/${id}/status`,
+          `${API_BASE}/api/business/admin/businesses/${id}/status`,
           { isActive: true },
           { 
-            headers: { Authorization: `Bearer ${localStorage.getItem("adminToken")}` },
             withCredentials: true
           }
         );
@@ -117,8 +114,7 @@ const BusinessManagement = () => {
     
     if (userInput === "DELETE") {
       try {
-        const response = await axios.delete(`/api/business/admin/businesses/${id}`, {
-          headers: { Authorization: `Bearer ${localStorage.getItem("adminToken")}` },
+        const response = await axios.delete(`${API_BASE}/api/business/admin/businesses/${id}`, {
           withCredentials: true
         });
         if (response.data.success) {

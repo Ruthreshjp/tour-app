@@ -1,6 +1,7 @@
 import { Rating } from "@mui/material";
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { API_BASE } from "../../utils/apiBase";
 
 const RatingsReviews = () => {
   const [packages, setPackages] = useState([]);
@@ -15,9 +16,9 @@ const RatingsReviews = () => {
       setLoading(true);
       let url =
         filter === "most" //most rated
-          ? `/api/package/get-packages?searchTerm=${search}&sort=packageTotalRatings`
-          : `/api/package/get-packages?searchTerm=${search}&sort=packageRating`; //all
-      const res = await fetch(url);
+          ? `${API_BASE}/api/package/get-packages?searchTerm=${search}&sort=packageTotalRatings`
+          : `${API_BASE}/api/package/get-packages?searchTerm=${search}&sort=packageRating`; //all
+      const res = await fetch(url, { credentials: 'include' });
       const data = await res.json();
       if (data?.success) {
         setPackages(data?.packages);

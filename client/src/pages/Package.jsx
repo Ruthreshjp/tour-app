@@ -10,6 +10,7 @@ import MapModal from "./components/MapModal";
 import { Autoplay } from "swiper/modules";
 import { API_BASE } from "../utils/apiBase";
 import { FaClock } from "react-icons/fa";
+import { getImageUrl } from "../utils/getImageUrl";
 const Package = () => {
   const [showMap, setShowMap] = useState(false);
   SwiperCore.use([Navigation]);
@@ -163,9 +164,13 @@ const Package = () => {
               {packageData.packageImages.map((img, i) => (
                 <SwiperSlide key={i}>
                   <img
-                    src={`http://localhost:8000/images/${img}`}
+                    src={getImageUrl(img)}
                     alt={`slide-${i}`}
-                    className="w-full h-full object-cover rounded-xl" // rounded-xl for smooth rounded corners
+                    className="w-full h-full object-cover rounded-xl shadow-md"
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = "https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=800&q=80";
+                    }}
                   />
                 </SwiperSlide>
               ))}

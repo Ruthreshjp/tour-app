@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // Create axios instance with default config
-const normalizedBaseUrl = (import.meta.env.VITE_API_URL || 'https://travelzone.onrender.com').replace(/\/+$/, '');
+const normalizedBaseUrl = (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '');
 const api = axios.create({
   baseURL: `${normalizedBaseUrl}/api`,
   withCredentials: true,

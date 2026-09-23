@@ -44,8 +44,12 @@ const httpServer = createServer(app);
 const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:5174",
+  "http://localhost:5175",
+  "http://localhost:5176",
+  "http://localhost:5177",
+  "http://localhost:3000",
   "https://travelzone-iota.vercel.app",
-  "https://*.vercel.app" // Allow all Vercel preview deployments
+  "https://*.vercel.app"
 ];
 
 app.use(cors({
@@ -55,10 +59,14 @@ app.use(cors({
       return callback(null, true);
     }
     
+    // Allow any localhost development port
+    if (origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:')) {
+      return callback(null, true);
+    }
+    
     // Check if origin is in whitelist or matches Vercel pattern
     const isAllowed = allowedOrigins.some(allowed => {
       if (allowed.includes('*')) {
-        const pattern = allowed.replace('https://', '').replace('.vercel.app', '');
         return origin.includes('vercel.app');
       }
       return origin === allowed;
@@ -207,6 +215,7 @@ app.use("/api/business", businessRoute);
 
 // Business-related routes
 app.use("/api/business-types", businessTypeRoute);
+app.use("/api/location", locationRoute);
 app.use("/api/locations", locationRoute);
 app.use("/api/business/bookings", businessBookingRoute);
 app.use("/api/business/views", businessViewRoute);

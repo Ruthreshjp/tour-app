@@ -148,6 +148,7 @@ const HotelBooking = ({ hotel, onBookingSuccess }) => {
       console.log('💰 Payment Amount:', paymentAmount);
       console.log('💳 Payment Option:', bookingData.paymentOption);
       
+      const userToken = localStorage.getItem('userToken') || localStorage.getItem('adminToken');
       const response = await axios.post('/api/booking/create', {
         businessId: hotel._id,
         businessType: 'hotel',
@@ -165,6 +166,9 @@ const HotelBooking = ({ hotel, onBookingSuccess }) => {
             `Advance payment of ₹${advanceAmount} (10%). Remaining ₹${totalAmount - advanceAmount} to be paid on spot.` : 
             `Full payment of ₹${totalAmount} made.`)
       }, {
+        headers: {
+          ...(userToken ? { Authorization: `Bearer ${userToken}` } : {})
+        },
         withCredentials: true
       });
 

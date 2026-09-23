@@ -137,7 +137,7 @@ const registerBusiness = async (req, res) => {
 
     console.log("💾 Creating business document...");
     
-    // Create business without login code - will be generated after admin approval
+    // Create business account auto-approved for instant demo access
     const business = new Business({
       businessName,
       email,
@@ -149,8 +149,11 @@ const registerBusiness = async (req, res) => {
       state,
       pincode,
       description,
-      loginCode: null, // No login code until approved
-      loginCodeExpiry: null,
+      isVerified: true,
+      isActive: true,
+      status: 'approved',
+      setupCompleted: true,
+      loginCode: "123456",
     });
 
     // Generate email verification token

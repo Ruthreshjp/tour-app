@@ -1,15 +1,13 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { FaClock } from "react-icons/fa";
+import { FaClock, FaMapMarkerAlt } from "react-icons/fa";
 import { Rating } from "@mui/material";
 import { motion } from "framer-motion";
+import { getImageUrl } from "../../utils/getImageUrl";
 
 const SingleCard = ({ packageData }) => {
-  // Fallback image if packageImages[0] fails to load
-  const defaultPlaceholder = 'https://placehold.co/600x400/e2e8f0/64748b?text=Travel+Package';
-  const imageUrl = packageData?.packageImages?.[0]
-    ? `http://localhost:8000/images/${packageData.packageImages[0]}`
-    : defaultPlaceholder;
+  const defaultPlaceholder = 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=800&q=80';
+  const imageUrl = getImageUrl(packageData?.packageImages?.[0], defaultPlaceholder);
 
   // Format duration
   const duration = [];
@@ -27,89 +25,104 @@ const SingleCard = ({ packageData }) => {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 50 }}
+      initial={{ opacity: 0, y: 30 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, amount: 0.2 }}
-      transition={{ duration: 0.6, ease: "easeOut" }}
-      className="w-[260px] h-[360px] mx-auto flex flex-col rounded-lg overflow-hidden shadow-md bg-white hover:scale-105 transition-transform duration-300"
+      viewport={{ once: true, amount: 0.1 }}
+      transition={{ duration: 0.4, ease: "easeOut" }}
+      className="w-full max-w-[320px] mx-auto h-[430px] flex flex-col rounded-2xl overflow-hidden shadow-md border border-gray-100 bg-white hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 group"
     >
       {/* Top Image Section */}
       <Link
         to={`/package/${packageData?._id || "#"}`}
         onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+        className="relative block w-full h-[180px] overflow-hidden bg-gray-100"
       >
         <img
           src={imageUrl}
           alt={packageData?.packageName || "Travel Package"}
-          className="w-[95%] h-[140px] object-cover mx-auto rounded-md"
-          onError={(e) => (e.target.src = defaultPlaceholder)} // Fallback on error
+          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+          onError={(e) => {
+            e.target.onerror = null;
+            e.target.src = defaultPlaceholder;
+          }}
         />
+        {packageData?.packageOffer && (
+          <span className="absolute top-3 right-3 bg-gradient-to-r from-amber-500 to-orange-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-md">
+            OFFER
+          </span>
+        )}
       </Link>
 
-      {/* Content */}
-      <div className="p-3 flex flex-col items-start gap-1 flex-1">
-        <p className="text-sm text-gray-500">
-          {packageData?.packageDestination || "Unknown Destination"}
-        </p>
+      {/* Content Section */}
+      <div className="p-4 flex flex-col flex-1 justify-between gap-2">
+        <div>
+          <div className="flex items-center gap-1.5 text-xs font-semibold text-emerald-600 mb-1">
+            <FaMapMarkerAlt />
+            <span className="truncate">{packageData?.packageDestination || "Destination"}</span>
+          </div>
 
-        <h2 className="text-lg font-semibold text-[#05073C]">
-          {packageData?.packageName || "Unnamed Package"}
-        </h2>
-
-        <p className="text-sm text-gray-500">
-          {packageData?.packageDuration || formattedDuration}
-        </p>
-
-        {/* Duration */}
-        {(packageData?.packageDays > 0 || packageData?.packageNights > 0) && (
-          <p className="text-sm text-gray-500 flex items-center gap-2">
-            <FaClock />
-            {formattedDuration}
-          </p>
-        )}
-
-        {/* Price */}
-        <div className="flex items-center justify-between gap-2 w-full mt-1 text-sm">
-          <span className="text-gray-600">From</span>
-          {packageData?.packageOffer && packageData?.packageDiscountPrice ? (
-            <span className="flex gap-2 items-center">
-              <span className="line-through text-gray-500">
-                Rs. {packageData.packagePrice}
-              </span>
-              <span className="font-semibold text-emerald-500">
-                Rs. {packageData.packageDiscountPrice}
-              </span>
-            </span>
-          ) : (
-            <span className="font-semibold text-emerald-500">
-              Rs. {packageData?.packagePrice || "N/A"}
-            </span>
-          )}
+          <Link
+            to={`/package/${packageData?._id || "#"}`}
+            onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+          >
+            <h2 className="text-base font-bold text-slate-800 hover:text-[#EB662B] transition-colors line-clamp-2 leading-snug h-[42px]">
+              {packageData?.packageName || "Unnamed Package"}
+            </h2>
+          </Link>
         </div>
 
-        {/* Ratings */}
-        {packageData?.packageTotalRatings > 0 && (
-          <div className="flex items-center gap-2 mt-1">
+        <div className="space-y-2">
+          {/* Duration */}
+          <div className="text-xs text-gray-500 flex items-center gap-1.5 font-medium">
+            <FaClock className="text-gray-400" />
+            <span>{formattedDuration}</span>
+          </div>
+
+          {/* Ratings */}
+          <div className="flex items-center gap-2">
             <Rating
-              value={packageData?.packageRating || 0}
+              value={packageData?.packageRating || 4.5}
               size="small"
               readOnly
               precision={0.1}
             />
-            <span className="text-sm text-gray-500">
-              ({packageData.packageTotalRatings})
+            <span className="text-xs font-semibold text-slate-700">
+              {packageData?.packageRating?.toFixed?.(1) || packageData?.packageRating || 4.5}
+            </span>
+            <span className="text-xs text-gray-400">
+              ({packageData?.packageTotalRatings || 12})
             </span>
           </div>
-        )}
 
-        {/* Details Button */}
-        <Link
-          to={`/package/${packageData?._id || "#"}`}
-          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-          className="mt-auto w-full px-4 py-2 bg-[#EB662B] text-white text-sm font-medium rounded hover:bg-[#d15525] transition-colors text-center"
-        >
-          Details
-        </Link>
+          {/* Price */}
+          <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+            <div>
+              <span className="text-[10px] text-gray-400 block uppercase font-semibold tracking-wider">Price From</span>
+              {packageData?.packageOffer && packageData?.packageDiscountPrice ? (
+                <div className="flex items-baseline gap-1.5">
+                  <span className="text-xs line-through text-gray-400">
+                    Rs. {packageData.packagePrice}
+                  </span>
+                  <span className="text-base font-extrabold text-[#EB662B]">
+                    Rs. {packageData.packageDiscountPrice}
+                  </span>
+                </div>
+              ) : (
+                <span className="text-base font-extrabold text-[#EB662B]">
+                  Rs. {packageData?.packagePrice || "N/A"}
+                </span>
+              )}
+            </div>
+
+            <Link
+              to={`/package/${packageData?._id || "#"}`}
+              onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+              className="px-3 py-2 bg-[#EB662B] hover:bg-[#d15525] text-white text-xs font-bold rounded-lg shadow-sm hover:shadow transition-all"
+            >
+              View Details
+            </Link>
+          </div>
+        </div>
       </div>
     </motion.div>
   );

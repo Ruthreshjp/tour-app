@@ -62,9 +62,10 @@ const Signup = () => {
       return;
     }
 
-    // Validate phone number
-    if (formData.phone.length !== 11) {
-      toast.error("Phone number must be 11 digits long.");
+    // Validate phone number length
+    const cleanPhone = formData.phone.replace(/[^0-9]/g, "");
+    if (cleanPhone.length < 7 || cleanPhone.length > 15) {
+      toast.error("Please enter a valid phone number (7 to 15 digits).");
       return;
     }
 

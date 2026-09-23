@@ -416,35 +416,38 @@ const MyBookings = () => {
                   )}
                   <p className="text-sm">
                     <strong>Payment:</strong> 
-                    <span className={`ml-1 px-2 py-1 rounded ${
-                      booking.paymentStatus === 'paid' ? 'bg-green-200 text-green-800' : 
+                    <span className={`ml-1 px-2 py-1 rounded text-xs font-bold ${
+                      (booking.paymentStatus === 'paid' || booking.transactionId) ? 'bg-green-200 text-green-800' : 
                       booking.paymentStatus === 'pending_verification' ? 'bg-yellow-200 text-yellow-800' :
                       'bg-orange-200 text-orange-800'
                     }`}>
-                      {booking.paymentStatus === 'pending_verification' ? 'Pending Verification' : booking.paymentStatus}
+                      {(booking.paymentStatus === 'paid' || booking.transactionId) ? 'PAID' : (booking.paymentStatus === 'pending_verification' ? 'Pending Verification' : booking.paymentStatus)}
                     </span>
                   </p>
-                  {booking.paymentStatus === 'pending_verification' && (
-                    <p className="text-xs text-yellow-700 mt-1 italic">
-                      ⏳ Business is verifying your payment. Please wait...
-                    </p>
+                  {booking.transactionId && (
+                    <div className="mt-1 p-2 bg-green-50 border border-green-200 rounded text-xs text-gray-700">
+                      <p className="font-bold text-green-800">✅ Payment Completed (Razorpay)</p>
+                      <p><strong>Txn ID:</strong> {booking.transactionId}</p>
+                    </div>
                   )}
                   <p className="text-sm">
                     <strong>Status:</strong> 
-                    <span className={`ml-1 px-2 py-1 rounded ${booking.status === 'confirmed' ? 'bg-green-200 text-green-800' : 'bg-blue-200 text-blue-800'}`}>
-                      {booking.status}
+                    <span className={`ml-1 px-2 py-1 rounded text-xs font-semibold ${
+                      (booking.status === 'confirmed' || booking.paymentStatus === 'paid' || booking.transactionId) ? 'bg-green-200 text-green-800' : 'bg-blue-200 text-blue-800'
+                    }`}>
+                      {(booking.status === 'confirmed' || booking.paymentStatus === 'paid' || booking.transactionId) ? 'CONFIRMED' : booking.status}
                     </span>
                   </p>
                 </div>
                 <div className="flex flex-col gap-2">
-                  {/* For cab bookings, only show Pay Now if status is confirmed and payment is pending */}
+                  {/* For cab bookings */}
                   {booking.businessType === 'cab' ? (
                     <>
-                      {booking.status === 'confirmed' && booking.paymentStatus !== 'paid' && (
+                      {booking.status === 'confirmed' && booking.paymentStatus !== 'paid' && !booking.transactionId && (
                         <>
                           <button
                             onClick={() => handlePayNow(booking)}
-                            className="px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700 font-semibold"
+                            className="px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700 font-semibold text-xs"
                           >
                             💳 Pay Advance (₹{booking.amount})
                           </button>
@@ -453,30 +456,39 @@ const MyBookings = () => {
                           </p>
                         </>
                       )}
+                      {(booking.paymentStatus === 'paid' || booking.transactionId) && (
+                        <div className="px-3 py-2 rounded-lg bg-green-600 text-white text-center font-bold text-xs shadow flex items-center justify-center gap-1">
+                          <span>✓</span> PAID DETAILS
+                        </div>
+                      )}
                       {booking.status === 'pending' && (
-                        <span className="px-4 py-2 rounded bg-blue-100 text-blue-800 text-sm font-medium">
+                        <span className="px-4 py-2 rounded bg-blue-100 text-blue-800 text-xs font-medium">
                           ⏳ Waiting for confirmation
                         </span>
                       )}
-                      {/* Add Rate Us button for completed cab bookings */}
-                      {booking.status === 'confirmed' && booking.paymentStatus === 'paid' && (
+                      {/* Rate Us button */}
+                      {(booking.paymentStatus === 'paid' || booking.transactionId) && (
                         <button
                           onClick={() => handleRateUs(booking)}
-                          className="px-4 py-2 rounded bg-yellow-500 text-white hover:bg-yellow-600 font-semibold"
+                          className="px-4 py-2 rounded bg-yellow-500 text-white hover:bg-yellow-600 font-semibold text-xs shadow"
                         >
-                          ⭐ Rate Your Experience
+                          ⭐ Rate Experience
                         </button>
                       )}
                     </>
                   ) : (
-                    /* For other bookings, show Pay Now if not paid */
-                    booking.paymentStatus !== 'paid' && (
+                    /* For hotel/restaurant/cafe bookings */
+                    booking.paymentStatus !== 'paid' && !booking.transactionId ? (
                       <button
                         onClick={() => handlePayNow(booking)}
-                        className="px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700"
+                        className="px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700 text-xs font-semibold shadow"
                       >
-                        Pay Now
+                        💳 Pay Now
                       </button>
+                    ) : (
+                      <div className="px-3 py-2 rounded-lg bg-green-600 text-white text-center font-bold text-xs shadow flex items-center justify-center gap-1">
+                        <span>✓</span> PAID DETAILS
+                      </div>
                     )
                   )}
                   {/* Add Rate Us button for completed non-cab bookings */}
@@ -538,47 +550,42 @@ const MyBookings = () => {
                   <p>
                     <strong>Payment Status:</strong>
                     <span
-                      className={`ml-1 px-2 py-1 rounded text-xs font-semibold ${
-                        booking.paymentStatus === 'paid'
+                      className={`ml-1 px-2 py-1 rounded text-xs font-bold ${
+                        (booking.paymentStatus === 'paid' || booking.transactionId)
                           ? 'bg-green-200 text-green-800'
                           : booking.paymentStatus === 'failed'
                             ? 'bg-red-200 text-red-800'
-                            : booking.transactionId
-                              ? 'bg-yellow-200 text-yellow-800'
-                              : 'bg-orange-200 text-orange-800'
+                            : 'bg-orange-200 text-orange-800'
                       }`}
                     >
-                      {booking.paymentStatus === 'paid'
-                        ? 'PAID'
-                        : booking.paymentStatus === 'failed'
-                          ? 'FAILED'
-                          : booking.transactionId
-                            ? 'PENDING REVIEW'
-                            : 'PENDING' }
+                      {(booking.paymentStatus === 'paid' || booking.transactionId) ? 'PAID' : (booking.paymentStatus ? booking.paymentStatus.toUpperCase() : 'PENDING')}
                     </span>
                   </p>
                   {booking.transactionId && (
-                    <p className="text-xs text-gray-600">
-                      Txn Ref: {booking.transactionId}
-                    </p>
-                  )}
-                  {booking.transactionId && booking.paymentStatus !== 'paid' && (
-                    <p className="text-xs text-yellow-700 italic">
-                      ⏳ Admin will verify this transaction and update the status soon.
-                    </p>
+                    <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded-lg">
+                      <p className="text-xs text-green-800 font-bold flex items-center gap-1">
+                        <span>✅</span> Payment Completed (Razorpay)
+                      </p>
+                      <p className="text-xs text-gray-700 mt-0.5">
+                        <strong>Txn ID:</strong> {booking.transactionId}
+                      </p>
+                      <p className="text-xs text-gray-700">
+                        <strong>Method:</strong> Razorpay Test Gateway
+                      </p>
+                    </div>
                   )}
                   <p>
                     <strong>Status:</strong>
                     <span
                       className={`ml-1 px-2 py-1 rounded text-xs font-semibold ${
-                        booking.bookingStatus === 'confirmed'
+                        (booking.bookingStatus === 'confirmed' || booking.paymentStatus === 'paid' || booking.transactionId)
                           ? 'bg-green-200 text-green-800'
                           : booking.bookingStatus === 'cancelled'
                             ? 'bg-red-200 text-red-800'
                             : 'bg-blue-200 text-blue-800'
                       }`}
                     >
-                      {booking.bookingStatus.toUpperCase()}
+                      {(booking.bookingStatus === 'confirmed' || booking.paymentStatus === 'paid' || booking.transactionId) ? 'CONFIRMED' : booking.bookingStatus.toUpperCase()}
                     </span>
                   </p>
                 </div>
@@ -599,18 +606,22 @@ const MyBookings = () => {
                       </div>
                     </div>
                   )}
-                  {booking.paymentStatus !== 'paid' && (
+                  {booking.paymentStatus !== 'paid' && !booking.transactionId ? (
                     <button
                       onClick={() => handlePackagePayNow(booking)}
-                      className="px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700 font-semibold"
+                      className="px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700 font-semibold text-xs shadow"
                     >
-                      💳 {booking.transactionId ? 'Resubmit Proof' : 'Pay Now'}
+                      💳 Pay Now
                     </button>
+                  ) : (
+                    <div className="px-3 py-2 rounded-lg bg-green-600 text-white text-center font-bold text-xs shadow flex items-center justify-center gap-1">
+                      <span>✓</span> PAID DETAILS
+                    </div>
                   )}
-                  {booking.paymentStatus === 'paid' && booking.bookingStatus === 'confirmed' && (
+                  {(booking.paymentStatus === 'paid' || booking.transactionId) && (
                     <button
                       onClick={() => handleRatePackage(booking)}
-                      className="px-4 py-2 rounded bg-orange-500 text-white hover:bg-orange-600 font-semibold"
+                      className="px-4 py-2 rounded bg-orange-500 text-white hover:bg-orange-600 font-semibold text-xs shadow"
                     >
                       ⭐ Rate Package
                     </button>

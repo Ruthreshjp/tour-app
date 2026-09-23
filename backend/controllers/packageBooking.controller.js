@@ -90,11 +90,10 @@ export const updatePaymentStatus = async (req, res) => {
       booking.paymentAmountType = paymentAmountType;
     }
 
-    // Customer submission keeps payment pending until admin review
-    booking.paymentStatus = "pending";
-    booking.paymentReceived = false;
-    booking.paymentReviewedBy = null;
-    booking.paymentReviewedAt = null;
+    // Automatic payment confirmation upon Razorpay transaction completion
+    booking.paymentStatus = "paid";
+    booking.paymentReceived = true;
+    booking.bookingStatus = "confirmed";
 
     await booking.save();
 

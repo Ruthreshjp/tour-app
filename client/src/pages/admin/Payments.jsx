@@ -51,11 +51,11 @@ const Payments = () => {
 
   // Calculate total paid amount
   const totalPaidAmount = allBookings
-    .filter(b => b.paymentStatus === 'paid')
+    .filter(b => b.paymentStatus === 'paid' || b.transactionId)
     .reduce((sum, b) => sum + (b.totalAmount || 0), 0);
 
   const totalPendingAmount = allBookings
-    .filter(b => b.paymentStatus === 'pending')
+    .filter(b => b.paymentStatus !== 'paid' && !b.transactionId)
     .reduce((sum, b) => sum + (b.totalAmount || 0), 0);
 
   return (
@@ -68,14 +68,14 @@ const Payments = () => {
         {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
           <div className="bg-green-100 p-4 rounded-lg">
-            <h3 className="text-lg font-semibold text-green-800">Total Paid</h3>
+            <h3 className="text-lg font-semibold text-green-800">Total Paid (Razorpay)</h3>
             <p className="text-2xl font-bold text-green-600">₹{totalPaidAmount.toLocaleString('en-IN')}</p>
-            <p className="text-sm text-gray-600">{allBookings.filter(b => b.paymentStatus === 'paid').length} bookings</p>
+            <p className="text-sm text-gray-600">{allBookings.filter(b => b.paymentStatus === 'paid' || b.transactionId).length} bookings</p>
           </div>
           <div className="bg-yellow-100 p-4 rounded-lg">
             <h3 className="text-lg font-semibold text-yellow-800">Total Pending</h3>
             <p className="text-2xl font-bold text-yellow-600">₹{totalPendingAmount.toLocaleString('en-IN')}</p>
-            <p className="text-sm text-gray-600">{allBookings.filter(b => b.paymentStatus === 'pending').length} bookings</p>
+            <p className="text-sm text-gray-600">{allBookings.filter(b => b.paymentStatus !== 'paid' && !b.transactionId).length} bookings</p>
           </div>
           <div className="bg-blue-100 p-4 rounded-lg">
             <h3 className="text-lg font-semibold text-blue-800">Total Bookings</h3>
@@ -153,13 +153,13 @@ const Payments = () => {
                     <td className="p-3">{booking.numberOfPeople}</td>
                     <td className="p-3 font-bold text-lg">₹{booking.totalAmount?.toLocaleString('en-IN')}</td>
                     <td className="p-3">
-                      <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
-                        booking.paymentStatus === 'paid' ? 'bg-green-200 text-green-800' :
-                        booking.paymentStatus === 'pending' ? 'bg-yellow-200 text-yellow-800' :
-                        'bg-red-200 text-red-800'
+                      <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                        (booking.paymentStatus === 'paid' || booking.transactionId) ? 'bg-green-200 text-green-800' :
+                        booking.paymentStatus === 'failed' ? 'bg-red-200 text-red-800' :
+                        'bg-yellow-200 text-yellow-800'
                       }`}>
-                        {booking.paymentStatus === 'paid' ? '✓ Paid' : 
-                         booking.paymentStatus === 'pending' ? '⏳ Pending' : '✗ Failed'}
+                        {(booking.paymentStatus === 'paid' || booking.transactionId) ? '✓ Paid (Razorpay)' : 
+                         booking.paymentStatus === 'failed' ? '✗ Failed' : '⏳ Pending'}
                       </span>
                     </td>
                     <td className="p-3">

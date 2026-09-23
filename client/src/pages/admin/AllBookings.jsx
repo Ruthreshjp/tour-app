@@ -196,63 +196,45 @@ const AllBookings = () => {
                           </div>
                           <div>
                             <strong>Status:</strong>{' '}
-                            <span className={`px-2 py-1 rounded text-xs font-semibold ${
-                              booking.paymentStatus === 'paid' ? 'bg-green-200 text-green-800' : 
+                            <span className={`px-2 py-1 rounded text-xs font-bold ${
+                              (booking.paymentStatus === 'paid' || booking.transactionId) ? 'bg-green-200 text-green-800' : 
                               booking.paymentStatus === 'failed' ? 'bg-red-200 text-red-800' : 
-                              booking.transactionId ? 'bg-yellow-200 text-yellow-800' : 'bg-orange-200 text-orange-800'
+                              'bg-orange-200 text-orange-800'
                             }`}>
-                              {booking.paymentStatus === 'paid' ? 'PAID' : booking.paymentStatus === 'failed' ? 'FAILED' : booking.transactionId ? 'PENDING REVIEW' : 'PENDING'}
+                              {(booking.paymentStatus === 'paid' || booking.transactionId) ? 'PAID' : (booking.paymentStatus ? booking.paymentStatus.toUpperCase() : 'PENDING')}
                             </span>
                           </div>
                           {booking.transactionId && (
-                            <div>
-                              <strong>Txn Ref:</strong> {booking.transactionId}
+                            <div className="text-emerald-700 font-mono">
+                              <strong>Txn ID:</strong> {booking.transactionId}
                             </div>
                           )}
-                          {booking.paymentReviewedAt && (
-                            <div className="text-gray-500">
-                              <strong>Reviewed:</strong> {new Date(booking.paymentReviewedAt).toLocaleString('en-IN')}
-                            </div>
-                          )}
-                          {booking.paymentReviewedBy && (
-                            <div className="text-gray-500">
-                              <strong>Reviewer:</strong> {booking.paymentReviewedBy?.username || 'Admin'}
-                            </div>
-                          )}
+                          <div className="text-gray-500">
+                            <strong>Gateway:</strong> Razorpay Standard
+                          </div>
                         </div>
                       </td>
                       <td className="border p-2">
                         <span className={`px-2 py-1 rounded text-xs font-semibold ${
-                          booking.bookingStatus === 'confirmed' ? 'bg-green-200 text-green-800' : 
+                          (booking.bookingStatus === 'confirmed' || booking.paymentStatus === 'paid' || booking.transactionId) ? 'bg-green-200 text-green-800' : 
                           booking.bookingStatus === 'cancelled' ? 'bg-red-200 text-red-800' : 
                           'bg-blue-200 text-blue-800'
                         }`}>
-                          {booking.bookingStatus.toUpperCase()}
+                          {(booking.bookingStatus === 'confirmed' || booking.paymentStatus === 'paid' || booking.transactionId) ? 'CONFIRMED' : booking.bookingStatus.toUpperCase()}
                         </span>
                       </td>
                       <td className="border p-2 text-sm">
                         {new Date(booking.createdAt).toLocaleDateString('en-IN')}
                       </td>
                       <td className="border p-2">
-                        {booking.paymentStatus === 'paid' ? (
-                          <span className="text-xs font-semibold text-green-700">Payment confirmed</span>
-                        ) : (
-                          <div className="flex flex-col gap-2">
-                            <button
-                              onClick={() => handlePaymentReview(booking._id, true, booking.paymentAmountType)}
-                              disabled={reviewAction === `${booking._id}-true` || !booking.transactionId}
-                              className="px-3 py-1 text-xs rounded bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                              Mark as Received
-                            </button>
-                            <button
-                              onClick={() => handlePaymentReview(booking._id, false, booking.paymentAmountType)}
-                              disabled={reviewAction === `${booking._id}-false`}
-                              className="px-3 py-1 text-xs rounded bg-yellow-500 text-white hover:bg-yellow-600 disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                              Keep Pending
-                            </button>
+                        {(booking.paymentStatus === 'paid' || booking.transactionId) ? (
+                          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-green-100 text-green-800 text-xs font-bold border border-green-300">
+                            <span>⚡</span> Auto Verified (Razorpay)
                           </div>
+                        ) : (
+                          <span className="px-3 py-1.5 rounded-lg bg-yellow-100 text-yellow-800 text-xs font-bold">
+                            ⏳ Awaiting Payment
+                          </span>
                         )}
                       </td>
                     </tr>

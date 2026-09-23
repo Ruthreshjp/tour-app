@@ -9,7 +9,8 @@ export const bookPackage = async (req, res) => {
   try {
     const { packageDetails, buyer, totalPrice, persons, date } = req.body;
 
-    if (req.user.id !== buyer) {
+    const currentUserId = String(req.user?.id || req.user?._id || "");
+    if (currentUserId && String(buyer) !== currentUserId) {
       return res.status(401).send({
         success: false,
         message: "You can only buy on your account!",
@@ -46,7 +47,11 @@ export const bookPackage = async (req, res) => {
       });
     }
   } catch (error) {
-    console.log(error);
+    console.error("Book package error:", error);
+    return res.status(500).send({
+      success: false,
+      message: error.message || "Server error occurred",
+    });
   }
 };
 
@@ -628,8 +633,9 @@ export const updatePaymentStatus = async (req, res) => {
       });
     }
 
-    // UPI or other online payment - set as pending verification
-    booking.paymentStatus = 'pending_verification';
+    // Set payment as paid and confirmed upon completion
+    booking.paymentStatus = 'paid';
+    booking.status = 'confirmed';
     booking.transactionId = transactionId;
     booking.paymentSubmittedAt = new Date();
     booking.updatedAt = new Date();

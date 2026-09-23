@@ -184,10 +184,10 @@ const Home = () => {
               )}
             {/* Top Rated */}
             {!loading && topPackages.length > 0 && (
-              <>
-                <h1 className="text-2xl font-semibold">Top Packages</h1>
+              <div className="mb-12">
+                <h1 className="text-2xl font-bold text-slate-800 mb-6">Top Packages</h1>
                 <motion.div
-                  className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-3"
+                  className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-8"
                   initial="hidden"
                   whileInView="show"
                   viewport={{ once: true, amount: 0.1 }}
@@ -204,53 +204,53 @@ const Home = () => {
                     <SingleCard key={i} packageData={packageData} />
                   ))}
                 </motion.div>
-                <div className="bg-[#EB662B] w-full h-[162px] flex flex-col md:flex-row items-center justify-around rounded-md">
-                  <h2 className="text-white text-base md:text-lg font-semibold">
+                <div className="bg-gradient-to-r from-orange-500 to-[#EB662B] w-full p-8 flex flex-col md:flex-row items-center justify-between rounded-2xl shadow-lg gap-4">
+                  <h2 className="text-white text-lg md:text-xl font-bold text-center md:text-left">
                     Early Booking Discounts Up To 50%!
                   </h2>
                   <Link
                     to="/search?offer=true"
-                    className="text-[#EB662B] bg-white px-6 py-2 rounded-md"
+                    className="text-[#EB662B] bg-white hover:bg-gray-50 px-8 py-3 rounded-xl font-bold transition-all shadow hover:shadow-md"
                   >
                     Book Now
                   </Link>
                 </div>
-              </>
+              </div>
             )}
             {/* latest */}
             {!loading && latestPackages.length > 0 && (
-              <>
-                <h1 className="text-2xl font-semibold mt-8">Latest Packages</h1>
-                <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-3 my-1">
+              <div className="mb-12">
+                <h1 className="text-2xl font-bold text-slate-800 mb-6">Latest Packages</h1>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-8">
                   {latestPackages.map((packageData, i) => (
                     <SingleCard key={i} packageData={packageData} />
                   ))}
                 </div>
-                <div className="bg-[#EB662B] w-full h-[162px] flex flex-col md:flex-row items-center justify-around rounded-md px-1">
-                  <h2 className="text-white text-base md:text-lg font-semibold">
-                    Check our latest packages and book now
+                <div className="bg-gradient-to-r from-slate-800 to-slate-900 w-full p-8 flex flex-col md:flex-row items-center justify-between rounded-2xl shadow-lg gap-4">
+                  <h2 className="text-white text-lg md:text-xl font-bold text-center md:text-left">
+                    Check out our newest travel packages and book your next trip!
                   </h2>
                   <Link
                     to={"/search"}
-                    className="text-[#EB662B] bg-white px-6 py-2 rounded-md"
+                    className="text-slate-900 bg-white hover:bg-gray-100 px-8 py-3 rounded-xl font-bold transition-all shadow hover:shadow-md"
                   >
-                    Book Now
+                    Explore All
                   </Link>
                 </div>
-              </>
+              </div>
             )}
             {/* offer */}
             {!loading && offerPackages.length > 0 && (
-              <>
-                <h1 className="text-2xl text-[#05073C] font-semibold mt-8">
+              <div className="mb-12">
+                <h1 className="text-2xl font-bold text-slate-800 mb-6">
                   Special Offers
                 </h1>
-                <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-3 my-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {offerPackages.map((packageData, i) => (
                     <Offers key={i} packageData={packageData} />
                   ))}
                 </div>
-              </>
+              </div>
             )}
           </div>
         </div>

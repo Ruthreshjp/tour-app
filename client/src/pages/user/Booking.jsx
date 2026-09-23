@@ -101,25 +101,14 @@ const Booking = () => {
   }, [currentUser]);
 
   //handle book package with payment options
-  const handleBookPackage = async () => {
+  const handleBookPackage = async (e) => {
+    if (e && e.preventDefault) e.preventDefault();
+
     if (
       !bookingData.date ||
       bookingData.persons <= 0
     ) {
       toast.error("Please select date and number of persons!");
-      return;
-    }
-
-    // Show no-refund confirmation
-    const confirmBooking = window.confirm(
-      '⚠️ Booking Confirmation\n\n' +
-      '• NO REFUND on cancellation\n' +
-      '• Payment is non-refundable\n' +
-      '• Please review your booking details carefully\n\n' +
-      'Do you want to proceed with the booking?'
-    );
-
-    if (!confirmBooking) {
       return;
     }
 
@@ -132,21 +121,24 @@ const Booking = () => {
       const advanceAmount = Math.ceil(totalAmount * 0.5); // 50% advance
       const paymentAmount = bookingData.paymentOption === 'advance' ? advanceAmount : totalAmount;
 
+      const token = localStorage.getItem("userToken") || localStorage.getItem("adminToken");
+
       const res = await fetch(
         `${API_BASE}/api/package-booking/create`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            ...(token ? { "Authorization": `Bearer ${token}` } : {})
           },
           credentials: "include",
           body: JSON.stringify({
             packageId: params?.id,
             travelDate: bookingData.date,
             numberOfPeople: bookingData.persons,
-            contactName: currentUser.username,
-            contactPhone: currentUser.phone,
-            contactEmail: currentUser.email,
+            contactName: currentUser?.username || "Guest",
+            contactPhone: currentUser?.phone || "+1234567890",
+            contactEmail: currentUser?.email || "guest@example.com",
             specialRequests: bookingData.paymentOption === 'advance' 
               ? `Advance payment of ₹${advanceAmount} (50%) submitted. Remaining ₹${totalAmount - advanceAmount} will be settled after confirmation.`
               : `Full payment of ₹${totalAmount} submitted for confirmation.`,

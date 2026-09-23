@@ -77,7 +77,12 @@ const RestaurantBooking = ({ restaurant, onBookingSuccess }) => {
         status: 'pending' // Restaurant bookings require approval like others
       };
 
-      const response = await axios.post('/api/booking/create', bookingPayload);
+      const userToken = localStorage.getItem('userToken') || localStorage.getItem('adminToken');
+      const response = await axios.post('/api/booking/create', bookingPayload, {
+        headers: {
+          ...(userToken ? { Authorization: `Bearer ${userToken}` } : {})
+        }
+      });
       
       if (response.data.success) {
         toast.success('🎉 Booking request submitted! Please wait for restaurant approval before making payment.');

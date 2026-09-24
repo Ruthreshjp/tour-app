@@ -1,4 +1,4 @@
-import express, { Router } from "express";
+import express from "express";
 import {
   bookPackage,
   cancelBooking,
@@ -7,38 +7,36 @@ import {
   getAllUserBookings,
   getCurrentBookings,
   getUserCurrentBookings,
+  createBooking,
+  getUserBookings,
+  getBusinessBookings,
+  updateBookingStatus,
+  updatePaymentStatus,
+  verifyPayment,
+  getBookingById
 } from "../controllers/booking.controller.js";
-import { isAdmin, requireSignIn } from "../middlewares/authMiddleware.js";
+import { isAdmin, requireSignIn, verifyToken } from "../middlewares/authMiddleware.js";
+import businessAuth from "../middlewares/businessAuth.js";
 
 const router = express.Router();
 
-// book package
+// Package booking routes
 router.post("/book-package/:packageId", requireSignIn, bookPackage);
-
-//get all current bookings admin
 router.get("/get-currentBookings", requireSignIn, isAdmin, getCurrentBookings);
-
-//get all bookings admin
 router.get("/get-allBookings", requireSignIn, isAdmin, getAllBookings);
-
-//get all current bookings by user id
-router.get(
-  "/get-UserCurrentBookings/:id",
-  requireSignIn,
-  getUserCurrentBookings
-);
-
-//get all bookings by user id
+router.get("/get-UserCurrentBookings/:id", requireSignIn, getUserCurrentBookings);
 router.get("/get-allUserBookings/:id", requireSignIn, getAllUserBookings);
-
-//delete history of booking
-router.delete(
-  "/delete-booking-history/:id/:userId",
-  requireSignIn,
-  deleteBookingHistory
-);
-
-//cancle booking by id
+router.delete("/delete-booking-history/:id/:userId", requireSignIn, deleteBookingHistory);
 router.post("/cancel-booking/:id/:userId", requireSignIn, cancelBooking);
+
+// Business & Service booking routes
+router.post('/create', verifyToken, createBooking);
+router.get('/user', verifyToken, getUserBookings);
+router.get('/business', businessAuth, getBusinessBookings);
+router.patch('/:bookingId/cancel', verifyToken, cancelBooking);
+router.patch('/:bookingId/status', businessAuth, updateBookingStatus);
+router.patch('/:bookingId/payment', verifyToken, updatePaymentStatus);
+router.patch('/:bookingId/verify-payment', businessAuth, verifyPayment);
+router.get('/:bookingId', verifyToken, getBookingById);
 
 export default router;

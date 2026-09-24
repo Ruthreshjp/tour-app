@@ -19,6 +19,7 @@ const AllBookings = () => {
   const [error, setError] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [reviewAction, setReviewAction] = useState(null);
+  const [selectedTransaction, setSelectedTransaction] = useState(null);
 
   const getAllBookings = async () => {
     setCurrentBookings([]);
@@ -212,6 +213,12 @@ const AllBookings = () => {
                           <div className="text-gray-500">
                             <strong>Gateway:</strong> Razorpay Standard
                           </div>
+                          <button
+                            onClick={() => setSelectedTransaction(booking)}
+                            className="mt-1 text-xs text-purple-700 bg-purple-50 hover:bg-purple-100 font-semibold px-2 py-1 rounded border border-purple-200 transition-colors flex items-center gap-1"
+                          >
+                            💳 View Transaction Details
+                          </button>
                         </div>
                       </td>
                       <td className="border p-2">
@@ -282,6 +289,98 @@ const AllBookings = () => {
             );
           })}
       </div>
+
+      {/* Transaction Details Modal */}
+      {selectedTransaction && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 border border-gray-100 relative">
+            <button
+              onClick={() => setSelectedTransaction(null)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 font-bold text-xl w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100"
+            >
+              ✕
+            </button>
+
+            <div className="flex items-center gap-3 mb-6 border-b pb-4">
+              <div className="w-12 h-12 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center text-2xl font-bold">
+                💳
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-gray-800">Transaction & Payment Details</h3>
+                <p className="text-xs text-gray-500 font-mono">Booking ID: {selectedTransaction._id}</p>
+              </div>
+            </div>
+
+            <div className="space-y-4 text-sm">
+              <div className="bg-purple-50 p-4 rounded-xl border border-purple-100">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-gray-600 font-medium">Payment Status:</span>
+                  <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                    (selectedTransaction.paymentStatus === 'paid' || selectedTransaction.transactionId) ? 'bg-green-200 text-green-800' : 'bg-orange-200 text-orange-800'
+                  }`}>
+                    {(selectedTransaction.paymentStatus === 'paid' || selectedTransaction.transactionId) ? 'PAID & CONFIRMED ✅' : 'PENDING PAYMENT ⏳'}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-gray-600 font-medium">Payment Type:</span>
+                  <span className="font-bold text-purple-700">
+                    {selectedTransaction.paymentAmountType === 'advance' ? 'Advance Payment (Partial)' : 'Full Payment'}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600 font-medium">Total Amount:</span>
+                  <span className="text-xl font-extrabold text-green-600">₹{selectedTransaction.totalAmount}</span>
+                </div>
+              </div>
+
+              <div className="space-y-2 border-t pt-3">
+                <h4 className="font-semibold text-gray-700 text-xs uppercase tracking-wider">Gateway Details</h4>
+                <div className="flex justify-between py-1 border-b border-gray-100">
+                  <span className="text-gray-500">Transaction ID:</span>
+                  <span className="font-mono text-emerald-700 font-semibold">{selectedTransaction.transactionId || 'N/A (Pending)'}</span>
+                </div>
+                <div className="flex justify-between py-1 border-b border-gray-100">
+                  <span className="text-gray-500">Payment Gateway:</span>
+                  <span className="font-medium text-gray-800">Razorpay Checkout Standard</span>
+                </div>
+                <div className="flex justify-between py-1 border-b border-gray-100">
+                  <span className="text-gray-500">Booking Date:</span>
+                  <span className="font-medium text-gray-800">{new Date(selectedTransaction.createdAt).toLocaleString()}</span>
+                </div>
+              </div>
+
+              <div className="space-y-2 border-t pt-3">
+                <h4 className="font-semibold text-gray-700 text-xs uppercase tracking-wider">Customer & Package Details</h4>
+                <div className="flex justify-between py-1 border-b border-gray-100">
+                  <span className="text-gray-500">Package Name:</span>
+                  <span className="font-semibold text-gray-800">{selectedTransaction.packageId?.packageName}</span>
+                </div>
+                <div className="flex justify-between py-1 border-b border-gray-100">
+                  <span className="text-gray-500">Customer Name:</span>
+                  <span className="font-medium text-gray-800">{selectedTransaction.contactName}</span>
+                </div>
+                <div className="flex justify-between py-1 border-b border-gray-100">
+                  <span className="text-gray-500">Customer Email:</span>
+                  <span className="font-medium text-gray-800">{selectedTransaction.contactEmail}</span>
+                </div>
+                <div className="flex justify-between py-1">
+                  <span className="text-gray-500">Customer Phone:</span>
+                  <span className="font-medium text-gray-800">{selectedTransaction.contactPhone}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-6 flex justify-end">
+              <button
+                onClick={() => setSelectedTransaction(null)}
+                className="bg-purple-600 hover:bg-purple-700 text-white font-semibold px-5 py-2.5 rounded-xl text-sm transition-colors shadow-md"
+              >
+                Close Details
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

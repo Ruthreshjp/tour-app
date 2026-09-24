@@ -23,6 +23,7 @@ import path from "path";
 import cors from "cors";
 import { connectDB } from "./config/connectDB.js";
 import cookieParser from "cookie-parser";
+import nodemailer from "nodemailer";
 import { Resend } from "resend";
 import { fileURLToPath } from 'url';
 
@@ -171,21 +172,33 @@ app.get('/api/proxy-image', async (req, res) => {
 
 // Email sending endpoint
 app.post("/api/send-email", async (req, res) => {
-  if (!resend) {
-    return res.status(500).json({ error: "Email service not configured" });
-  }
-
   const { user_name, user_email, message } = req.body;
 
   if (!user_name || !user_email || !message) {
     return res.status(400).json({ error: "All fields are required" });
   }
 
+  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+    return res.status(500).json({ error: "Email service credentials not configured" });
+  }
+
   try {
-    await resend.emails.send({
-      from: "TravelZone <onboarding@resend.dev>",
-      to: ["travelzonnee@gmail.com"],
-      reply_to: user_email,
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+      tls: {
+        rejectUnauthorized: false
+      }
+    });
+
+    // 1. Send notification email to admin
+    await transporter.sendMail({
+      from: `TravelZone <${process.env.EMAIL_USER}>`,
+      to: process.env.EMAIL_USER,
+      replyTo: user_email,
       subject: `New Contact Form Message from ${user_name}`,
       html: `
         <h3>New Contact Form Submission</h3>
@@ -195,10 +208,29 @@ app.post("/api/send-email", async (req, res) => {
       `,
     });
 
-    res.status(200).json({ message: "Email sent successfully" });
+    // 2. Send confirmation email to user
+    await transporter.sendMail({
+      from: `TravelZone <${process.env.EMAIL_USER}>`,
+      to: user_email,
+      subject: `Thank you for contacting TravelZone, ${user_name}!`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #EB662B;">Thank you for getting in touch!</h2>
+          <p>Hi ${user_name},</p>
+          <p>We have received your message and our team will get back to you shortly.</p>
+          <div style="background-color: #f8fafc; padding: 15px; border-radius: 8px; margin: 15px 0;">
+            <p style="margin: 0;"><strong>Your Message:</strong></p>
+            <p style="margin: 5px 0; color: #475569;">"${message}"</p>
+          </div>
+          <p>Best regards,<br><strong>TravelZone Team</strong></p>
+        </div>
+      `,
+    });
+
+    res.status(200).json({ success: true, message: "Email sent successfully" });
   } catch (error) {
-    console.error("Resend error:", error);
-    res.status(500).json({ error: "Failed to send email" });
+    console.error("Nodemailer error:", error);
+    res.status(500).json({ error: "Failed to send email: " + error.message });
   }
 });
 

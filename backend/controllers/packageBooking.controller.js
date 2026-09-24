@@ -1,6 +1,93 @@
 import PackageBooking from "../models/packageBooking.model.js";
 import Package from "../models/package.model.js";
 import User from "../models/user.model.js";
+import nodemailer from "nodemailer";
+
+// Helper to send package booking email confirmation
+const sendPackageBookingEmail = async (booking, packageData, isConfirmed = false) => {
+  try {
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) return;
+
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+      tls: { rejectUnauthorized: false }
+    });
+
+    const recipientEmail = booking.contactEmail || (booking.userId && booking.userId.email);
+    if (!recipientEmail) return;
+
+    const formattedDate = booking.travelDate ? new Date(booking.travelDate).toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    }) : "N/A";
+    
+    const pkgName = (packageData && packageData.packageName) || (booking.packageId && booking.packageId.packageName) || "Travel Package";
+    const paymentTypeLabel = booking.paymentAmountType === "advance" ? "Advance Payment" : "Full Payment";
+    const bookingConfirmed = booking.bookingStatus === "confirmed" || booking.paymentStatus === "paid" || isConfirmed;
+
+    const mailOptions = {
+      from: `TravelZone <${process.env.EMAIL_USER}>`,
+      to: recipientEmail,
+      subject: bookingConfirmed 
+        ? `✅ Booking Confirmed & Successfully Booked - ${pkgName}` 
+        : `🎉 Package Booking Received - ${pkgName}`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+          <div style="background-color: ${bookingConfirmed ? '#10B981' : '#EB662B'}; color: white; padding: 24px; text-align: center;">
+            <h2 style="margin: 0; font-size: 22px;">
+              ${bookingConfirmed ? '✅ Package Successfully Booked & Confirmed!' : '🎉 Package Booking Received'}
+            </h2>
+            <p style="margin: 5px 0 0 0; opacity: 0.9;">${bookingConfirmed ? 'Your travel package is officially confirmed' : 'Please complete your payment to finalize booking'}</p>
+          </div>
+
+          <div style="padding: 24px; background-color: #ffffff;">
+            <p style="font-size: 16px; color: #1e293b;">Hi <strong>${booking.contactName || 'Valued Customer'}</strong>,</p>
+            <p style="color: #475569; line-height: 1.5;">
+              ${bookingConfirmed 
+                ? `Great news! Your package booking for <strong>${pkgName}</strong> has been successfully processed and confirmed.`
+                : `Thank you for choosing TravelZone! We have received your booking request for <strong>${pkgName}</strong>.`}
+            </p>
+
+            <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; padding: 20px; border-radius: 8px; margin: 20px 0;">
+              <h3 style="color: #0f172a; margin-top: 0; border-bottom: 1px solid #cbd5e1; padding-bottom: 8px;">📦 Booking & Payment Details</h3>
+              <p style="margin: 8px 0;"><strong>Package Name:</strong> ${pkgName}</p>
+              <p style="margin: 8px 0;"><strong>Booking ID:</strong> <span style="font-family: monospace; background: #e2e8f0; padding: 2px 6px; border-radius: 4px;">${booking._id}</span></p>
+              <p style="margin: 8px 0;"><strong>Travel Date:</strong> ${formattedDate}</p>
+              <p style="margin: 8px 0;"><strong>Travelers:</strong> ${booking.numberOfPeople} Person(s)</p>
+              <p style="margin: 8px 0;"><strong>Payment Type:</strong> <span style="color: #2563eb; font-weight: bold;">${paymentTypeLabel}</span></p>
+              <p style="margin: 8px 0;"><strong>Total Amount:</strong> <strong style="color: #16a34a; font-size: 18px;">₹${booking.totalAmount}</strong></p>
+              ${booking.transactionId ? `<p style="margin: 8px 0;"><strong>Transaction ID:</strong> <span style="font-family: monospace; color: #0284c7;">${booking.transactionId}</span></p>` : ''}
+              <p style="margin: 8px 0;"><strong>Booking Status:</strong> <span style="color: ${bookingConfirmed ? '#16a34a' : '#d97706'}; font-weight: bold;">${bookingConfirmed ? 'CONFIRMED ✅' : 'PENDING PAYMENT ⏳'}</span></p>
+            </div>
+
+            <div style="background-color: #eff6ff; border-left: 4px solid #3b82f6; padding: 12px 16px; border-radius: 4px; margin: 20px 0;">
+              <p style="margin: 0; color: #1e40af; font-size: 14px;">
+                💡 <strong>Tip:</strong> Keep this email for your records. You can view your complete itinerary anytime in your account dashboard.
+              </p>
+            </div>
+
+            <p style="color: #64748b; font-size: 14px; margin-top: 30px;">
+              If you have any questions, feel free to contact us.<br>
+              Safe Travels!<br>
+              <strong>The TravelZone Team</strong>
+            </p>
+          </div>
+        </div>
+      `
+    };
+
+    await transporter.sendMail(mailOptions);
+    console.log("📧 Package booking confirmation email sent to:", recipientEmail);
+  } catch (error) {
+    console.error("❌ Error sending package booking email:", error);
+  }
+};
 
 // Create package booking
 export const createPackageBooking = async (req, res) => {
@@ -53,6 +140,9 @@ export const createPackageBooking = async (req, res) => {
       .populate("packageId")
       .populate("userId", "username email");
 
+    // Send confirmation email
+    sendPackageBookingEmail(populatedBooking, packageData);
+
     res.status(201).json({
       success: true,
       message: "Booking created successfully. Please complete payment.",
@@ -101,6 +191,9 @@ export const updatePaymentStatus = async (req, res) => {
       .populate("packageId")
       .populate("userId", "username email")
       .populate("paymentReviewedBy", "username email");
+
+    // Send payment confirmation email
+    sendPackageBookingEmail(updatedBooking, updatedBooking.packageId);
 
     res.json({
       success: true,

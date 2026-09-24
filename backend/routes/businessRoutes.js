@@ -1,5 +1,5 @@
 import express from "express";
-import businessAuth from "../middleware/businessAuth.js";
+import businessAuth from "../middlewares/businessAuth.js";
 import { verifyToken, isAdmin } from "../middlewares/authMiddleware.js";
 import {
   registerBusiness,

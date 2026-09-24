@@ -8,7 +8,7 @@ import {
   getBusinessRatings
 } from "../controllers/analytics.controller.js";
 import { verifyToken as authenticateToken } from "../middlewares/authMiddleware.js";
-import businessAuth from "../middleware/businessAuth.js";
+import businessAuth from "../middlewares/businessAuth.js";
 
 const router = express.Router();
 

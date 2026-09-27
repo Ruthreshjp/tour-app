@@ -7,13 +7,7 @@ import packageRoute from "./routes/package.route.js";
 import ratingRoute from "./routes/rating.route.js";
 import bookingRoute from "./routes/booking.route.js";
 import businessRoute from "./routes/businessRoutes.js";
-import businessTypeRoute from "./routes/businessType.route.js";
 import locationRoute from "./routes/location.route.js";
-import businessBookingRoute from "./routes/businessBooking.route.js";
-import businessViewRoute from "./routes/businessView.route.js";
-import businessRatingRoute from "./routes/businessRating.route.js";
-import businessInventoryRoute from "./routes/businessInventory.route.js";
-import businessViewTrackingRoute from "./routes/businessViewTracking.route.js";
 import analyticsRoute from "./routes/analytics.routes.js";
 import geocodeRoute from "./routes/geocode.route.js";
 import packageBookingRoute from "./routes/packageBooking.route.js";
@@ -240,18 +234,9 @@ app.use("/api/package", packageRoute);
 app.use("/api/package-booking", packageBookingRoute);
 app.use("/api/rating", ratingRoute);
 app.use("/api/booking", bookingRoute);
-// Main business routes
 app.use("/api/business", businessRoute);
-
-// Business-related routes
-app.use("/api/business-types", businessTypeRoute);
 app.use("/api/location", locationRoute);
 app.use("/api/locations", locationRoute);
-app.use("/api/business/bookings", businessBookingRoute);
-app.use("/api/business/views", businessViewRoute);
-app.use("/api/business/ratings", businessRatingRoute);
-app.use("/api/business/inventory", businessInventoryRoute);
-app.use("/api/business/analytics", businessViewTrackingRoute);
 app.use("/api/analytics", analyticsRoute);
 app.use("/api/geocode", geocodeRoute);
 

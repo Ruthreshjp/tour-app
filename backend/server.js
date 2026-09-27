@@ -6,7 +6,6 @@ import userRoute from "./routes/user.route.js";
 import packageRoute from "./routes/package.route.js";
 import ratingRoute from "./routes/rating.route.js";
 import bookingRoute from "./routes/booking.route.js";
-import paymentRoutes from "./routes/payment.routes.js";
 import businessRoute from "./routes/businessRoutes.js";
 import businessTypeRoute from "./routes/businessType.route.js";
 import locationRoute from "./routes/location.route.js";
@@ -241,7 +240,6 @@ app.use("/api/package", packageRoute);
 app.use("/api/package-booking", packageBookingRoute);
 app.use("/api/rating", ratingRoute);
 app.use("/api/booking", bookingRoute);
-app.use("/api/payment", paymentRoutes);
 // Main business routes
 app.use("/api/business", businessRoute);
 

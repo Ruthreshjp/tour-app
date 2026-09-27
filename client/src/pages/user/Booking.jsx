@@ -87,18 +87,7 @@ const Booking = () => {
     }
   };
 
-  //get paymentgateway token
-  const getToken = async () => {
-    try {
-      const { data } = await axios.get(`${API_BASE}/api/package/braintree/token`);
-      setClientToken(data?.clientToken);
-    } catch (error) {
-      console.log(error);
-    }
-  };
-  useEffect(() => {
-    getToken();
-  }, [currentUser]);
+
 
   //handle book package with payment options
   const handleBookPackage = async (e) => {
